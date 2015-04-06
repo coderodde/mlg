@@ -498,4 +498,14 @@ public abstract class Simplifier {
         System.arraycopy(array2, 0, ret, array1.length, array2.length);
         return ret;
     }
+    
+    protected static long sum(final List<Long> list, final int[] indices) {
+        long sum = 0L;
+        
+        for (final int i : indices) {
+            sum += list.get(i);
+        }
+        
+        return sum;
+    }
 }

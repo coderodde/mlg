@@ -1,11 +1,8 @@
 package net.coderodde.loan.support;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
-import java.util.Set;
 import net.coderodde.loan.Simplifier;
-import net.coderodde.loan.Utilities;
 
 /**
  * This simplifier seeks to divide the array in two subarrays in such a way,

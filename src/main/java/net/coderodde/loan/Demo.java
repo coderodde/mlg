@@ -4,8 +4,10 @@ import java.util.Random;
 import static net.coderodde.loan.Utilities.countGroups;
 import static net.coderodde.loan.Utilities.createEquityArray;
 import static net.coderodde.loan.Utilities.print;
+import net.coderodde.loan.support.CombinationGenerator;
 import net.coderodde.loan.support.CombinatorialSimplifier;
 import net.coderodde.loan.support.GeneralPartitionGenerator;
+import net.coderodde.loan.support.GreedyCombinatorialSimplifier;
 import net.coderodde.loan.support.PartitionalSimplifierV1;
 import net.coderodde.loan.support.PartitionalSimplifierV2;
 import net.coderodde.loan.support.PartitionalSimplifierV3;
@@ -25,7 +27,7 @@ public class Demo {
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 80;
+    private static final int LENGTH = 50;
     
     /**
      * The minimum arc weight.
@@ -43,8 +45,23 @@ public class Demo {
      * @param args ignored.
      */
     public static void main(final String... args) {
-        final long seed = System.currentTimeMillis();
-        final Random rnd = new Random(seed);
+//        CombinationGenerator cg = new CombinationGenerator(5);
+//        
+//        int line = 1;
+//        
+//        while (cg.inc()) {
+//            if (line == 14) {
+//                cg.remove();
+//                cg.inc();
+//            }
+//            System.out.printf("%3d: ", line++);
+//            print(cg.getIndices());
+//            
+//        }
+//        System.exit(0);
+        
+        final long seed = 1428336986515L;//System.currentTimeMillis();
+        final Random rnd = new Random();
         
         System.out.println("Seed:        " + seed);
         System.out.println("Graph size:  " + LENGTH);
@@ -58,10 +75,11 @@ public class Demo {
         System.out.println("Easy groups: " + countGroups(graph) + endl);
         System.out.print("Input: ");
         
-        print(graph);
+        Utilities.print(graph);
         
         System.out.println();
         
+        profile(new GreedyCombinatorialSimplifier(), graph);
         profile(new CombinatorialSimplifier(), graph);
 //        profile(new PartitionalSimplifierV1(), graph);
         profile(new PartitionalSimplifierV2(), graph);
@@ -85,7 +103,7 @@ public class Demo {
         
         System.out.println("Time: " + (tb - ta) + " ms. Groups: " + 
                            countGroups(result));
-        print(result);
+        Utilities.print(result);
         System.out.println();
     }
     
@@ -125,5 +143,13 @@ public class Demo {
             
             System.out.println();
         } while (spg.inc());
+    }
+    
+    private static final void print(final int[] arr) {
+        for (final int i : arr) {
+            System.out.print(i + " ");
+        }
+        
+        System.out.println();
     }
 }
