@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.coderodde.loan.support.GeneralPartitionGenerator;
+import net.coderodde.loan.support.ReversedGeneralPartitionGenerator;
 import net.coderodde.loan.support.SpecialPartitionGenerator;
 
 /**
@@ -294,6 +295,7 @@ public abstract class Simplifier {
                                   final long[] largeArray) {
         return simplifyImpl(smallArray, largeArray, 1);
     }
+    
     /**
      * Implements the algorithm for group maximization.
      * 
@@ -356,6 +358,51 @@ public abstract class Simplifier {
                              bestSmallIndices,
                              bestLargeIndices,
                              bestk);
+    }
+    
+    /**
+     * Implements the algorithm for group maximization.
+     * 
+     * @param  smallArray    the smaller of the node arrays.
+     * @param  largeArray    the larger of the node arrays.
+     * @param  minimumBlocks the minimum amount of blocks.
+     * 
+     * @return the node array producing maximal amount of groups.
+     */
+    protected long[] simplifyImplReversed(final long[] smallArray,
+                                          final long[] largeArray,
+                                          final int minimumBlocks) {
+        final ReversedGeneralPartitionGenerator smallGenerator =
+                new ReversedGeneralPartitionGenerator(smallArray.length,
+                                                      minimumBlocks);
+        do {
+            final int[] smallIndices = smallGenerator.getIndices();
+            
+            final int blocks = smallGenerator.getk();
+            
+            final SpecialPartitionGenerator largeGenerator = 
+                    new SpecialPartitionGenerator(largeArray.length, blocks);
+            
+            final int[] largeIndices = largeGenerator.getIndices();
+            
+            do {
+                int groups = countGroups(smallArray,
+                                         largeArray,
+                                         smallIndices,
+                                         largeIndices,
+                                         blocks);
+                
+                if (groups > 0) {
+                    return buildSolution(smallArray,
+                                         largeArray,
+                                         smallIndices,
+                                         largeIndices,
+                                         blocks);
+                }
+            } while (largeGenerator.inc());
+        } while (smallGenerator.inc());
+        
+        throw new IllegalStateException("Should not get here.");
     }
     
     /**

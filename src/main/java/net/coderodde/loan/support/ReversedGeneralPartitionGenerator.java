@@ -1,13 +1,13 @@
 package net.coderodde.loan.support;
 
 /**
- * This partition generator generates all possible partitions with requested 
- * blocks sizes.
+ * The partition generator generates partitions in reverse order (by amount of
+ * blocks in the partition). 
  * 
  * @author Rodion Efremov
  * @version 1.6
  */
-public class GeneralPartitionGenerator {
+public class ReversedGeneralPartitionGenerator {
 
     /**
      * The total amount of elements in a set.
@@ -20,6 +20,11 @@ public class GeneralPartitionGenerator {
     private int k;
     
     /**
+     * The minimum block amount for partitions.
+     */
+    private final int minimumBlocks;
+    
+    /**
      * The actual generator for current <tt>k</tt>.
      */
     private SpecialPartitionGenerator generator;
@@ -29,7 +34,7 @@ public class GeneralPartitionGenerator {
      * 
      * @param n the amount of elements being partitioned.
      */
-    public GeneralPartitionGenerator(final int n) {
+    public ReversedGeneralPartitionGenerator(final int n) {
         this(n, 1);
     }
     
@@ -37,14 +42,15 @@ public class GeneralPartitionGenerator {
      * Constructs a new partition generator generating all partitions with at
      * least <code>startingBlocks</code> blocks.
      * 
-     * @param n              the size of the set to partition.
-     * @param startingBlocks the minimum amount of blocks in the partition.
+     * @param n             the size of the set to partition.
+     * @param minimumBlocks the minimum amount of blocks in the partition.
      */
-    public GeneralPartitionGenerator(final int n, final int startingBlocks) {
-        check(n);
+    public ReversedGeneralPartitionGenerator(final int n, 
+                                             final int minimumBlocks) {
+        this.minimumBlocks = minimumBlocks;
+        this.k = n;
         this.n = n;
-        this.k = startingBlocks;
-        this.generator = new SpecialPartitionGenerator(n, k);
+        this.generator = new SpecialPartitionGenerator(n, n);
     }
 
     /**
@@ -60,8 +66,8 @@ public class GeneralPartitionGenerator {
             return true;
         }
         
-        if (k < n) {
-            generator = new SpecialPartitionGenerator(n, ++k);
+        if (k > minimumBlocks) {
+            generator = new SpecialPartitionGenerator(n, --k);
             return true;
         }
         
@@ -90,5 +96,5 @@ public class GeneralPartitionGenerator {
         if (n < 1) {
             throw new IllegalArgumentException("'n' < 1.");
         }
-    }
+    }    
 }

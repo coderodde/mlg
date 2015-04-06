@@ -8,6 +8,7 @@ import net.coderodde.loan.support.GeneralPartitionGenerator;
 import net.coderodde.loan.support.PartitionalSimplifierV1;
 import net.coderodde.loan.support.PartitionalSimplifierV2;
 import net.coderodde.loan.support.PartitionalSimplifierV3;
+import net.coderodde.loan.support.PartitionalSimplifierV4;
 import net.coderodde.loan.support.SpecialPartitionGenerator;
 
 /**
@@ -18,10 +19,12 @@ import net.coderodde.loan.support.SpecialPartitionGenerator;
  */
 public class Demo {
     
+    public static final String endl = "\n";
+    
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 40;
+    private static final int LENGTH = 75;
     
     /**
      * The minimum arc weight.
@@ -67,8 +70,8 @@ public class Demo {
 //        } while (spg.inc());
 //        System.exit(0);
         
-        System.out.println("Seed: " + seed);
-        System.out.println("Graph size: " + LENGTH);
+        System.out.println("Seed:        " + seed);
+        System.out.println("Graph size:  " + LENGTH);
         
         final long[] graph = createEquityArray(LENGTH,
                                                rnd,
@@ -76,13 +79,14 @@ public class Demo {
                                                MAX_WEIGHT,
                                                0.3f);
         
-        System.out.println("Easy groups: " + countGroups(graph));
+        System.out.println("Easy groups: " + countGroups(graph) + endl);
         
         print(graph);
         
-        profile(new PartitionalSimplifierV1(), graph);
+//        profile(new PartitionalSimplifierV1(), graph);
         profile(new PartitionalSimplifierV2(), graph);
         profile(new PartitionalSimplifierV3(), graph);
+        profile(new PartitionalSimplifierV4(), graph);
     }
     
     /**
