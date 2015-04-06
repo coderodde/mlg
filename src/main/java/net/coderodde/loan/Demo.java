@@ -4,6 +4,7 @@ import java.util.Random;
 import static net.coderodde.loan.Utilities.countGroups;
 import static net.coderodde.loan.Utilities.createEquityArray;
 import static net.coderodde.loan.Utilities.print;
+import net.coderodde.loan.support.CombinatorialSimplifier;
 import net.coderodde.loan.support.GeneralPartitionGenerator;
 import net.coderodde.loan.support.PartitionalSimplifierV1;
 import net.coderodde.loan.support.PartitionalSimplifierV2;
@@ -24,7 +25,7 @@ public class Demo {
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 75;
+    private static final int LENGTH = 80;
     
     /**
      * The minimum arc weight.
@@ -45,31 +46,6 @@ public class Demo {
         final long seed = System.currentTimeMillis();
         final Random rnd = new Random(seed);
         
-//        int n = 6, k = 3;
-//        SpecialPartitionGenerator spg = new SpecialPartitionGenerator(n, k);
-//        GeneralPartitionGenerator pg = new GeneralPartitionGenerator(n, k);
-//        long total = 0;
-//        
-//        for (int i = k; i <= n; ++i) {
-//            total += num(n, i);
-//        }
-//        
-//        System.out.println("Total: " + total);
-//        
-//        int index = 0;
-//        
-//        do {
-//            System.out.printf("%2d: ", ++index);
-//            
-//            int[] ind = spg.getIndices();
-//            for (int i = 0; i < ind.length; ++i) {
-//                System.out.print(ind[i]);
-//            }
-//            
-//            System.out.println();
-//        } while (spg.inc());
-//        System.exit(0);
-        
         System.out.println("Seed:        " + seed);
         System.out.println("Graph size:  " + LENGTH);
         
@@ -80,9 +56,13 @@ public class Demo {
                                                0.3f);
         
         System.out.println("Easy groups: " + countGroups(graph) + endl);
+        System.out.print("Input: ");
         
         print(graph);
         
+        System.out.println();
+        
+        profile(new CombinatorialSimplifier(), graph);
 //        profile(new PartitionalSimplifierV1(), graph);
         profile(new PartitionalSimplifierV2(), graph);
         profile(new PartitionalSimplifierV3(), graph);
@@ -109,7 +89,7 @@ public class Demo {
         System.out.println();
     }
     
-    static final long num(final long n, final long k) {
+    private static final long num(final long n, final long k) {
         if (n == 0L && k == 0L) {
             return 1L;
         }
@@ -119,5 +99,31 @@ public class Demo {
         }
         
         return k * num(n - 1, k) + num(n - 1, k - 1);
+    }
+    
+    private static final void shit() {
+        int n = 6, k = 3;
+        SpecialPartitionGenerator spg = new SpecialPartitionGenerator(n, k);
+        GeneralPartitionGenerator pg = new GeneralPartitionGenerator(n, k);
+        long total = 0;
+        
+        for (int i = k; i <= n; ++i) {
+            total += num(n, i);
+        }
+        
+        System.out.println("Total: " + total);
+        
+        int index = 0;
+        
+        do {
+            System.out.printf("%2d: ", ++index);
+            
+            int[] ind = spg.getIndices();
+            for (int i = 0; i < ind.length; ++i) {
+                System.out.print(ind[i]);
+            }
+            
+            System.out.println();
+        } while (spg.inc());
     }
 }
