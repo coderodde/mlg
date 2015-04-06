@@ -4,11 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import net.coderodde.loan.support.PartitionGenerator;
 import net.coderodde.loan.support.SpecialPartitionGenerator;
 
@@ -422,6 +419,21 @@ public abstract class Simplifier {
         ret[SEMITRIVIAL_GROUPS_INDEX] = semitrivialArray;
         ret[NONTRIVIAL_GROUPS_INDEX] = nontrivialArray;
         
+        return ret;
+    }
+    
+    /**
+     * Creates and returns an array resulting from concatenating 
+     * <code>array1</code> and <code>array2</code>.
+     * 
+     * @param  array1 the first array.
+     * @param  array2 the second array to append to the first one.
+     * @return the concatenation of the two input arrays.
+     */
+    protected static long[] append(final long[] array1, final long[] array2) {
+        final long[] ret = new long[array1.length + array2.length];
+        System.arraycopy(array1, 0, ret, 0, array1.length);
+        System.arraycopy(array2, 0, ret, array1.length, array2.length);
         return ret;
     }
 }

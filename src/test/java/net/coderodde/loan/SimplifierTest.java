@@ -4,6 +4,7 @@ import java.util.Arrays;
 import net.coderodde.loan.Simplifier.GraphSplit;
 import static net.coderodde.loan.Simplifier.NONTRIVIAL_GROUPS_INDEX;
 import static net.coderodde.loan.Simplifier.SEMITRIVIAL_GROUPS_INDEX;
+import static net.coderodde.loan.Simplifier.append;
 import static net.coderodde.loan.Simplifier.split;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -61,5 +62,19 @@ public class SimplifierTest {
         assertEquals(-3L, nontrivialArray[0]);
         assertEquals(4L, nontrivialArray[1]);
         assertEquals(6L, nontrivialArray[2]);
+    }
+    
+    @Test
+    public void testAppend() {
+        final long[] arr1 = new long[]{1, 0, -3};
+        final long[] arr2 = new long[]{0, 4, -6};
+        final long[] ret = append(arr1, arr2);
+        
+        assertEquals(1,  ret[0]);
+        assertEquals(0,  ret[1]);
+        assertEquals(-3, ret[2]);
+        assertEquals(0,  ret[3]);
+        assertEquals(4,  ret[4]);
+        assertEquals(-6, ret[5]);
     }
 }

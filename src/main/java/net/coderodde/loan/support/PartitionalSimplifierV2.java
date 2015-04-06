@@ -25,17 +25,21 @@ public class PartitionalSimplifierV2 extends Simplifier {
             return graph.clone();
         }
         
-        final GraphSplit gs = split(array1);
+        final long[][] data = stripSemitrivialGroups(array1);
+        final GraphSplit gs = split(data[NONTRIVIAL_GROUPS_INDEX]);
         
-        final long[] result = 
-                gs.positiveArray.length < gs.negativeArray.length ?
-                        simplifyImpl(gs.positiveArray, gs.negativeArray) :
-                        simplifyImpl(gs.negativeArray, gs.positiveArray);
+        long[] result = new long[0];
+        
+        if (gs.positiveArray.length > 0) {
+            result = gs.positiveArray.length < gs.negativeArray.length ?
+                            simplifyImpl(gs.positiveArray, gs.negativeArray) :
+                            simplifyImpl(gs.negativeArray, gs.positiveArray);
+        }
         
         if (trivialGroupCount > 0) {
-            final long[] ret = new long[graph.length];
+            final long[] ret = new long[result.length + trivialGroupCount];
             System.arraycopy(result, 0, ret, 0, result.length);
-            return ret;
+            return append(ret, data[SEMITRIVIAL_GROUPS_INDEX]);
         } else {
             return result;
         }

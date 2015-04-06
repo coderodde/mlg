@@ -5,6 +5,7 @@ import static net.coderodde.loan.Utilities.countGroups;
 import static net.coderodde.loan.Utilities.createEquityArray;
 import static net.coderodde.loan.Utilities.print;
 import net.coderodde.loan.support.PartitionalSimplifierV1;
+import net.coderodde.loan.support.PartitionalSimplifierV2;
 
 /**
  * This class demonstrates the performance of simplifiers.
@@ -17,7 +18,7 @@ public class Demo {
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 20;
+    private static final int LENGTH = 40;
     
     /**
      * The minimum arc weight.
@@ -35,7 +36,7 @@ public class Demo {
      * @param args ignored.
      */
     public static void main(final String... args) {
-        final long seed = System.currentTimeMillis();
+        final long seed = 1428314888519L;//System.currentTimeMillis();
         final Random rnd = new Random(seed);
         
         System.out.println("Seed: " + seed);
@@ -52,6 +53,7 @@ public class Demo {
         print(graph);
         
         profile(new PartitionalSimplifierV1(), graph);
+        profile(new PartitionalSimplifierV2(), graph);
     }
     
     /**
@@ -71,5 +73,6 @@ public class Demo {
         System.out.println("Time: " + (tb - ta) + " ms. Groups: " + 
                            countGroups(result));
         print(result);
+        System.out.println();
     }
 }
