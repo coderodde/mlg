@@ -4,7 +4,7 @@ import java.util.Random;
 import static net.coderodde.loan.Utilities.countGroups;
 import static net.coderodde.loan.Utilities.createEquityArray;
 import static net.coderodde.loan.Utilities.print;
-import net.coderodde.loan.support.PartitionalSimplifier;
+import net.coderodde.loan.support.PartitionalSimplifierV1;
 
 /**
  * This class demonstrates the performance of simplifiers.
@@ -51,7 +51,7 @@ public class Demo {
         
         print(graph);
         
-        profile(new PartitionalSimplifier(), graph);
+        profile(new PartitionalSimplifierV1(), graph);
     }
     
     /**

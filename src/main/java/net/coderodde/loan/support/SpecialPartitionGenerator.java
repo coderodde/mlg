@@ -35,7 +35,7 @@ public class SpecialPartitionGenerator {
      * @param n the size of the list to partition.
      * @param k the amount of blocks in the partition.
      */
-    SpecialPartitionGenerator(final int n, final int k) {
+    public SpecialPartitionGenerator(final int n, final int k) {
         check(n, k);
         this.n = n;
         this.k = k;
@@ -56,7 +56,7 @@ public class SpecialPartitionGenerator {
      * <code>true</code> is returned. Otherwise, <code>false</code> is returned.
      * @return 
      */
-    boolean inc() {
+    public boolean inc() {
         for (int i = n - 1; i > 0; --i) {
             if (s[i] < k - 1 && s[i] <= m[i - 1]) {
                 s[i]++;
@@ -83,7 +83,7 @@ public class SpecialPartitionGenerator {
      * 
      * @return indices.
      */
-    int[] getIndices() {
+    public int[] getIndices() {
         return s;
     }
     

@@ -3,7 +3,14 @@ package net.coderodde.loan;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import net.coderodde.loan.support.PartitionGenerator;
+import net.coderodde.loan.support.SpecialPartitionGenerator;
 
 /**
  * This class defines the API for loan graph simplifiers. A loan graph is
@@ -12,9 +19,11 @@ import java.util.List;
  * of the node.
  * <p>
  * A <b>group</b> is a set of nodes, for which the sum of equities is zero. A 
- * group of one node with equity 0 is called a <b>trivial group</b>. A group 
- * <tt>G</tt> is called a <b>proper group</b> if and only if <tt>G</tt> cannot
- * be partitioned in two non-empty groups.
+ * group of one node with equity 0 is called a <b>trivial group</b>. A group of
+ * two nodes with opposite non-zero equities is called <b>semi-trivial</b>.
+ * <p>
+ * A group <tt>G</tt> is called a <b>proper group</b> if and only if <tt>G</tt> 
+ * cannot be partitioned in two non-empty groups.
  * <p>
  * Since we want to minimize the amount of arcs in the loan graph, the problem
  * may be rephrased as the problem of splitting the graph in as many groups as
@@ -26,12 +35,30 @@ import java.util.List;
  */
 public abstract class Simplifier {
     
+    protected static final int SEMITRIVIAL_GROUPS_INDEX = 0;
+    protected static final int NONTRIVIAL_GROUPS_INDEX = 1;
+    
+    /**
+     * The comparator for sorting the groups.
+     */
     private static final NodeListComparator nodeListComparator = 
             new NodeListComparator();
     
+    /**
+     * <code>cachedPositiveArray[i]</code> caches the sum of positive equities
+     * from the block <tt>i</tt>.
+     */
     private long[] cachedPositiveArray;
+    
+    /**
+     * <code>cachedNegativeArray[i]</code> caches the sum of negative equities
+     * from the block <tt>i</tt>.
+     */
     private long[] cachedNegativeArray;
     
+    /**
+     * Constructs this simplifier and initializes the cache arrays.
+     */
     public Simplifier() {
         this.cachedPositiveArray = new long[0];
         this.cachedNegativeArray = new long[0];
@@ -77,6 +104,10 @@ public abstract class Simplifier {
         return ret;
     }
     
+    /**
+     * Holds a partition of a graph into array of positive nodes and an array
+     * of negative nodes.
+     */
     protected static class GraphSplit {
         public final long[] positiveArray;
         public final long[] negativeArray;
@@ -87,12 +118,18 @@ public abstract class Simplifier {
         }
     }
     
-    protected static GraphSplit split(final long[] array) {
+    /**
+     * Splits the input graph into positive and negative nodes.
+     * 
+     * @param  graph the graph to split.
+     * @return a graph split.
+     */
+    protected static GraphSplit split(final long[] graph) {
         int positiveCount = 0;
         int negativeCount = 0;
         
-        for (int i = 0; i < array.length; ++i) {
-            final long l = array[i];
+        for (int i = 0; i < graph.length; ++i) {
+            final long l = graph[i];
             
             if (l < 0L) {
                 ++negativeCount;
@@ -110,7 +147,7 @@ public abstract class Simplifier {
         int positiveIndex = 0;
         int negativeIndex = 0;
         
-        for (final long l : array) {
+        for (final long l : graph) {
             if (l > 0L) {
                 positiveArray[positiveIndex++] = l;
             } else {
@@ -122,6 +159,21 @@ public abstract class Simplifier {
                               negativeArray);
     }
     
+    /**
+     * Counts the amount of groups formed by the indices. 
+     * <code>positiveIndices[i]</code> gives the block index for a node
+     * <code>positiveArray[i]</code>. Negative structures work in analogous way.
+     * Once the nodes are in their blocks, the routine checks whether they can
+     * be matched. If so the amount of blocks is returned. Otherwise zero is 
+     * returned indicating that the buckets may not be paired into groups.
+     * 
+     * @param positiveArray   the array of positive nodes.
+     * @param negativeArray   the array of negative nodes.
+     * @param positiveIndices the array of positive indices.
+     * @param negativeIndices the array of negative indices.
+     * @param k               the amount of partition blocks.
+     * @return                the amount of groups in the data.
+     */
     protected int countGroups(final long[] positiveArray,
                               final long[] negativeArray,
                               final int[] positiveIndices,
@@ -159,6 +211,16 @@ public abstract class Simplifier {
         return k;
     }
     
+    /**
+     * Reconstructs a solution from the input data.
+     * 
+     * @param positiveArray   the array of positive nodes.
+     * @param negativeArray   the array of negative nodes.
+     * @param positiveIndices the array of positive indices.
+     * @param negativeIndices the array of negative indices.
+     * @param blocks          the amount of partition blocks.
+     * @return                the graph with <code>blocks</code> groups.
+     */
     protected long[] buildSolution(final long[] positiveArray,
                                    final long[] negativeArray,
                                    final int[] positiveIndices,
@@ -221,5 +283,145 @@ public abstract class Simplifier {
             
             return Math.abs(sum);
         }
+    }
+    
+    /**
+     * Implements the algorithm for group maximization.
+     * 
+     * @param  smallArray the smaller of the node arrays.
+     * @param  largeArray the larger of the node arrays.
+     * 
+     * @return the node array producing maximal amount of groups.
+     */
+    protected long[] simplifyImpl(final long[] smallArray,
+                                  final long[] largeArray) {
+        final PartitionGenerator smallGenerator =
+                new PartitionGenerator(smallArray.length);
+        
+        final int[] bestSmallIndices = new int[smallArray.length];
+        final int[] bestLargeIndices = new int[largeArray.length];
+        final int[] smallIndices = smallGenerator.getIndices();
+        
+        int bestGroupAmount = 0;
+        int bestk = -1;
+        
+        do {
+            final int blocks = smallGenerator.getk();
+            
+            final SpecialPartitionGenerator largeGenerator = 
+                    new SpecialPartitionGenerator(largeArray.length, blocks);
+            
+            final int[] largeIndices = largeGenerator.getIndices();
+            
+            do {
+                int groups = countGroups(smallArray,
+                                         largeArray,
+                                         smallIndices,
+                                         largeIndices,
+                                         blocks);
+                
+                if (bestGroupAmount < groups) {
+                    bestGroupAmount = groups;
+                    bestk = blocks;
+                    
+                    System.arraycopy(smallIndices, 
+                                     0, 
+                                     bestSmallIndices,
+                                     0,
+                                     smallIndices.length);
+                    
+                    System.arraycopy(largeIndices,
+                                     0, 
+                                     bestLargeIndices, 
+                                     0, 
+                                     largeIndices.length);
+                }
+            } while (largeGenerator.inc());
+        } while (smallGenerator.inc());
+        
+        return buildSolution(smallArray,
+                             largeArray,
+                             bestSmallIndices,
+                             bestLargeIndices,
+                             bestk);
+    }
+    
+    /**
+     * Splits the input graph into to arrays: one containing only semi-trivial 
+     * groups, and another one containing non-trivial groups.
+     * 
+     * @param  graph the graph from which to extract the semi-trivial groups.
+     * @return       two arrays: one for semi-trivial nodes, and another for 
+     *               non-trivial groups.
+     */
+    protected static long[][] stripSemitrivialGroups(final long[] graph) {
+        final Map<Long, Integer> map = new HashMap<>();
+        
+        for (final long l : graph) {
+            if (!map.containsKey(l)) {
+                map.put(l, 1);
+            } else {
+                map.put(l, map.get(l) + 1);
+            }
+        }
+        
+        final List<Long> semitrivialNodeList = new ArrayList<>(graph.length);
+        final List<Long> nontrivialNodeList = new ArrayList<>(graph.length);
+        
+        for (final long l : graph) {
+            if (map.containsKey(l) && map.containsKey(-l)) {
+                final int minOccurrences = Math.min(map.get(l), map.get(-l));
+                
+                for (int i = 0; i < minOccurrences; ++i) {
+                    semitrivialNodeList.add(l);
+                    semitrivialNodeList.add(-l);
+                }
+                
+                map.put(l, map.get(l) - minOccurrences);
+                map.put(-l, map.get(-l) - minOccurrences);
+                
+                if (map.get(l) == 0) {
+                    map.remove(l);
+                }
+                
+                if (map.get(-l) == 0) {
+                    map.remove(-l);
+                }
+            } else if (map.containsKey(l)) {
+                for (int i = 0; i < map.get(l); ++i) {
+                    nontrivialNodeList.add(l);
+                }
+                
+                map.remove(l);
+            } else if (map.containsKey(-l)){
+                for (int i = 0; i < map.get(-l); ++i) {
+                    nontrivialNodeList.add(-l);
+                }
+                
+                map.remove(-l);
+            }
+        }
+        
+        final long[] semitrivialArray = new long[semitrivialNodeList.size()];
+        final long[] nontrivialArray = new long[nontrivialNodeList.size()];
+        
+        int index = 0;
+        
+        for (final long l : semitrivialNodeList) {
+            semitrivialArray[index++] = l;
+        }
+        
+        index = 0;
+        
+        for (final long l : nontrivialNodeList) {
+            nontrivialArray[index++] = l;
+        }
+            
+        final long[][] ret = new long[2][];
+        
+        ret[SEMITRIVIAL_GROUPS_INDEX] = semitrivialArray;
+        ret[NONTRIVIAL_GROUPS_INDEX] = nontrivialArray;
+        
+        return ret;
     }
 }
