@@ -1,17 +1,19 @@
 package net.coderodde.loan.support;
 
 import net.coderodde.loan.Simplifier;
+import net.coderodde.loan.Utilities;
 
 /**
- * This simplifier improves 
- * {@link net.coderodde.loan.support.PartitionalSimplifierV1} by resolving 
- * semi-trivial groups before proceeding to generating partitions.
+ * This simplifier improves on 
+ * {@link net.coderodde.loan.support.PartitionalSimplifierV2} by counting the 
+ * amount of groups in the input array (<tt>N</tt>) and starting partitioning 
+ * from <tt>N</tt> blocks.
  * 
  * @author Rodion Efremov
  * @version 1.6
  */
-public class PartitionalSimplifierV2 extends Simplifier {
-    
+public class PartitionalSimplifierV3 extends Simplifier {
+
     @Override
     public long[] simplify(long[] graph) {
         if (graph.length == 0) {
@@ -30,10 +32,17 @@ public class PartitionalSimplifierV2 extends Simplifier {
         
         long[] result = new long[0];
         
+        final int initialBlocks = 
+                Utilities.countGroups(data[NONTRIVIAL_GROUPS_INDEX]);
+        
         if (gs.positiveArray.length > 0) {
             result = gs.positiveArray.length < gs.negativeArray.length ?
-                        simplifyImpl(gs.positiveArray, gs.negativeArray) :
-                        simplifyImpl(gs.negativeArray, gs.positiveArray);
+                            simplifyImpl(gs.positiveArray, 
+                                         gs.negativeArray, 
+                                         initialBlocks) :
+                            simplifyImpl(gs.negativeArray, 
+                                         gs.positiveArray,
+                                         initialBlocks);
         }
         
         if (trivialGroupCount > 0) {

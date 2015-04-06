@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import net.coderodde.loan.support.PartitionGenerator;
+import net.coderodde.loan.support.GeneralPartitionGenerator;
 import net.coderodde.loan.support.SpecialPartitionGenerator;
 
 /**
@@ -292,17 +292,32 @@ public abstract class Simplifier {
      */
     protected long[] simplifyImpl(final long[] smallArray,
                                   final long[] largeArray) {
-        final PartitionGenerator smallGenerator =
-                new PartitionGenerator(smallArray.length);
+        return simplifyImpl(smallArray, largeArray, 1);
+    }
+    /**
+     * Implements the algorithm for group maximization.
+     * 
+     * @param  smallArray    the smaller of the node arrays.
+     * @param  largeArray    the larger of the node arrays.
+     * @param  initialBlocks the amount of initial blocks.
+     * 
+     * @return the node array producing maximal amount of groups.
+     */
+    protected long[] simplifyImpl(final long[] smallArray,
+                                  final long[] largeArray,
+                                  final int initialBlocks) {
+        final GeneralPartitionGenerator smallGenerator =
+                new GeneralPartitionGenerator(smallArray.length,
+                                              initialBlocks);
         
         final int[] bestSmallIndices = new int[smallArray.length];
         final int[] bestLargeIndices = new int[largeArray.length];
-        final int[] smallIndices = smallGenerator.getIndices();
         
         int bestGroupAmount = 0;
         int bestk = -1;
         
         do {
+            final int[] smallIndices = smallGenerator.getIndices();
             final int blocks = smallGenerator.getk();
             
             final SpecialPartitionGenerator largeGenerator = 
