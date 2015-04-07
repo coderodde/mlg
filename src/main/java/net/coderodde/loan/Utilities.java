@@ -10,7 +10,16 @@ import java.util.Random;
  */
 public class Utilities {
     
+    /**
+     * The {@link print} routine will not print an array larger than this 
+     * integer.
+     */
     private static final int MAX_GRAPH_SIZE_FOR_PRINT = 40;
+    
+    /**
+     * The maximum percentage for arc load factor.
+     */
+    private static final float MAX_ARC_LOAD_FACTOR = 0.99f;
     
     /**
      * Creates a random loan graph represented by an array of node equities.
@@ -19,7 +28,7 @@ public class Utilities {
      * @param random         the random number generator.
      * @param minWeight      the minimum weight of an arc.
      * @param maxWeight      the maximum weight of an arc.    
-     * @param edgeLoadFactor the percentage of the amount of edges to add to the
+     * @param arcLoadFactor the percentage of the amount of edges to add to the
      *                       graph.
      * @return               a random loan graph.
      */
@@ -27,13 +36,14 @@ public class Utilities {
                                                  final Random random,
                                                  final long minWeight,
                                                  final long maxWeight,
-                                                 final float edgeLoadFactor) {
+                                                 final float arcLoadFactor) {
         final long[] array = new long[length];
         
-        int edges = Math.min((int)(length * edgeLoadFactor), 
-                             length * (length - 1));
+        int arcs = (int)(length * (length - 1) 
+                                * Math.min(arcLoadFactor, 
+                                           MAX_ARC_LOAD_FACTOR));
         
-        while (edges > 0) {
+        while (arcs > 0) {
             final long weight = 
                     minWeight + (long)((maxWeight - minWeight) 
                                         * random.nextFloat());
@@ -43,7 +53,7 @@ public class Utilities {
             array[a] += weight;
             array[b] -= weight;
             
-            --edges;
+            --arcs;
         }
         
         return array;

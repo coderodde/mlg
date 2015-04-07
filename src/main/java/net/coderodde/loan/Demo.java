@@ -27,7 +27,7 @@ public class Demo {
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 50;
+    private static final int LENGTH = 700;
     
     /**
      * The minimum arc weight.
@@ -60,8 +60,8 @@ public class Demo {
 //        }
 //        System.exit(0);
         
-        final long seed = 1428336986515L;//System.currentTimeMillis();
-        final Random rnd = new Random();
+        final long seed = System.currentTimeMillis();
+        final Random rnd = new Random(seed);
         
         System.out.println("Seed:        " + seed);
         System.out.println("Graph size:  " + LENGTH);
@@ -72,6 +72,14 @@ public class Demo {
                                                MAX_WEIGHT,
                                                0.3f);
         
+//        long l = graph[0];
+//        graph[0] = 0;
+//        graph[1] += l;
+//        
+//        l = graph[2];
+//        graph[2] = 0;
+//        graph[3] += l;
+        
         System.out.println("Easy groups: " + countGroups(graph) + endl);
         System.out.print("Input: ");
         
@@ -80,11 +88,11 @@ public class Demo {
         System.out.println();
         
         profile(new GreedyCombinatorialSimplifier(), graph);
-        profile(new CombinatorialSimplifier(), graph);
+//        profile(new CombinatorialSimplifier(), graph);
 //        profile(new PartitionalSimplifierV1(), graph);
-        profile(new PartitionalSimplifierV2(), graph);
-        profile(new PartitionalSimplifierV3(), graph);
-        profile(new PartitionalSimplifierV4(), graph);
+//        profile(new PartitionalSimplifierV2(), graph);
+//        profile(new PartitionalSimplifierV3(), graph);
+//        profile(new PartitionalSimplifierV4(), graph);
     }
     
     /**
