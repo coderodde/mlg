@@ -15,6 +15,17 @@ import net.coderodde.loan.Simplifier;
  */
 public class GreedyCombinatorialSimplifier extends Simplifier {
 
+    /**
+     * This algorithm generates combinations of positive nodes, and for each
+     * positive combination, it generate some negative combinations.
+     * <p>
+     * This algorithm may be much efficient than any other simplifier in this
+     * package, but this comes at expense of optimality: this simplifier may
+     * returned (slightly) suboptimal solutions.
+     *  
+     * @param  graph the graph to simplify.
+     * @return the simplified graph.
+     */
     @Override
     public long[] simplify(long[] graph) {
         if (graph.length == 0) {
@@ -59,6 +70,7 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
         
         final List<List<Long>> groupList = new ArrayList<>(graph.length);
         
+        // For each positive combination, do:
         outer:
         while (positiveGenerator.inc()) {
             positiveIndices = positiveGenerator.getIndices();
@@ -68,6 +80,7 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
             final CombinationGenerator negativeGenerator =
                     new CombinationGenerator((negativeList.size()));
             
+            // For "each" negative combination, do:
             while (negativeGenerator.inc()) {
                 negativeIndices = negativeGenerator.getIndices();
                 
@@ -76,9 +89,15 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
                 
                 if (currentNegativeSum > currentPositiveSum) {
                     if (negativeGenerator.hasNoGaps()) {
+                        // Once here, any successing negative combination will
+                        // be greater in absolute value than the current
+                        // positive combination. Therefore stop generating 
+                        // negative combinations and generate a new positive
+                        // combination.
                         continue outer;
                     }
                 } else if (currentPositiveSum == currentNegativeSum) {
+                    // We have found a group.
                     final List<Long> group = new ArrayList<>();
                     
                     for (final int index : positiveIndices) {
@@ -86,12 +105,14 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
                     }
                     
                     for (final int index : negativeIndices) {
+                        // Note the minus sign. The absolute value was taken
+                        // from each negative equity.
                         group.add(-negativeList.get(index));
                     }
                     
                     groupList.add(group);
-                    pruneList(positiveList, positiveIndices);
-                    pruneList(negativeList, negativeIndices);
+                    removeFromList(positiveList, positiveIndices);
+                    removeFromList(negativeList, negativeIndices);
                     positiveGenerator.remove();
                     continue outer;
                 }
@@ -100,27 +121,34 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
         
         int index = 0;
         
-        final long[] result = 
+        long[] result = 
                 new long[graph.length - trivialGroupCount 
                                       - data1[SEMITRIVIAL_GROUPS_INDEX].length];
         
+        // Build the solution array.
         for (final List<Long> group : groupList) {
             for (final long l : group) {
                 result[index++] = l;
             }
         }
         
+        result = append(result, data1[SEMITRIVIAL_GROUPS_INDEX]);
+        
         if (trivialGroupCount > 0) {
-            final long[] ret = new long[result.length + trivialGroupCount];
-            System.arraycopy(result, 0, ret, 0, result.length);
-            // Append back the semi-trivial groups.
-            return append(ret, data1[SEMITRIVIAL_GROUPS_INDEX]);
-        } else {
-            return result;
-        }
+            result = append(result, new long[trivialGroupCount]);
+        } 
+        
+        return result;
     }
     
-    private void pruneList(final List<Long> list, final int[] indices) {
+    /**
+     * Removes from <code>list</code> all elements with indices in 
+     * <code>indices</code>.
+     * 
+     * @param list    the list from which to remove elements.
+     * @param indices the indices of elements to remove.
+     */
+    private void removeFromList(final List<Long> list, final int[] indices) {
         final int[] copy = indices.clone();
         Arrays.sort(copy);
         

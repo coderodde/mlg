@@ -30,17 +30,15 @@ public class PartitionalSimplifierV1 extends Simplifier {
         
         final GraphSplit gs = split(array1);
         
-        final long[] result = 
+        long[] result = 
                 gs.positiveArray.length < gs.negativeArray.length ?
                         simplifyImpl(gs.positiveArray, gs.negativeArray) :
                         simplifyImpl(gs.negativeArray, gs.positiveArray);
         
         if (trivialGroupCount > 0) {
-            final long[] ret = new long[graph.length];
-            System.arraycopy(result, 0, ret, 0, result.length);
-            return ret;
-        } else {
-            return result;
-        }
+            result = append(result, new long[trivialGroupCount]);
+        } 
+        
+        return result;
     }
 }

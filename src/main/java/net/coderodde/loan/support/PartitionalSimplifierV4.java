@@ -13,6 +13,16 @@ import net.coderodde.loan.Utilities;
  */
 public class PartitionalSimplifierV4 extends Simplifier {
 
+    /**
+     * Implements a partitional approach for founding the groups: the algorithm
+     * splits the graph into positive and negative arrays by equities, choses
+     * the smaller one, and splits it in maximal amount of blocks (one node per
+     * block). Then the algorithm proceeds towards larger blocks, and as soon
+     * it has a group match, the optimal solution is found.
+     * 
+     * @param  graph the graph to simplify.
+     * @return a simplified graph.
+     */
     @Override
     public long[] simplify(long[] graph) {
         if (graph.length == 0) {
@@ -44,12 +54,12 @@ public class PartitionalSimplifierV4 extends Simplifier {
                                                  initialBlocks);
         }
         
+        result = append(result, data[SEMITRIVIAL_GROUPS_INDEX]);
+        
         if (trivialGroupCount > 0) {
-            final long[] ret = new long[result.length + trivialGroupCount];
-            System.arraycopy(result, 0, ret, 0, result.length);
-            return append(ret, data[SEMITRIVIAL_GROUPS_INDEX]);
-        } else {
-            return result;
-        }   
+            result = append(result, new long[trivialGroupCount]);
+        } 
+        
+        return result;   
     }
 }

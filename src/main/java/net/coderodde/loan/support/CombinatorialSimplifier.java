@@ -54,7 +54,7 @@ public class CombinatorialSimplifier extends Simplifier {
         
         int index = 0;
         
-        final long[] result = 
+        long[] result = 
                 new long[graph.length - trivialGroupCount 
                                       - data1[SEMITRIVIAL_GROUPS_INDEX].length];
         
@@ -64,14 +64,13 @@ public class CombinatorialSimplifier extends Simplifier {
             }
         }
         
+        result = append(result, data1[SEMITRIVIAL_GROUPS_INDEX]);
+        
         if (trivialGroupCount > 0) {
-            final long[] ret = new long[result.length + trivialGroupCount];
-            System.arraycopy(result, 0, ret, 0, result.length);
-            // Append back the semi-trivial groups.
-            return append(ret, data1[SEMITRIVIAL_GROUPS_INDEX]);
-        } else {
-            return result;
-        }
+            result = append(result, new long[trivialGroupCount]);
+        } 
+        
+        return result;
     } 
     
     private static final class Data {

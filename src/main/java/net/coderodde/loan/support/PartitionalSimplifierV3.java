@@ -45,12 +45,12 @@ public class PartitionalSimplifierV3 extends Simplifier {
                                          initialBlocks);
         }
         
+        result = append(result, data[SEMITRIVIAL_GROUPS_INDEX]);
+        
         if (trivialGroupCount > 0) {
-            final long[] ret = new long[result.length + trivialGroupCount];
-            System.arraycopy(result, 0, ret, 0, result.length);
-            return append(ret, data[SEMITRIVIAL_GROUPS_INDEX]);
-        } else {
-            return result;
-        }
+            result = append(result, new long[trivialGroupCount]);
+        } 
+        
+        return result;
     }
 }

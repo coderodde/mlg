@@ -376,27 +376,27 @@ public abstract class Simplifier {
                 new ReversedGeneralPartitionGenerator(smallArray.length,
                                                       minimumBlocks);
         do {
-            final int[] smallIndices = smallGenerator.getIndices();
+            final int[] smallArrayIndices = smallGenerator.getIndices();
             
             final int blocks = smallGenerator.getk();
             
             final SpecialPartitionGenerator largeGenerator = 
                     new SpecialPartitionGenerator(largeArray.length, blocks);
             
-            final int[] largeIndices = largeGenerator.getIndices();
+            final int[] largeArrayIndices = largeGenerator.getIndices();
             
             do {
                 int groups = countGroups(smallArray,
                                          largeArray,
-                                         smallIndices,
-                                         largeIndices,
+                                         smallArrayIndices,
+                                         largeArrayIndices,
                                          blocks);
                 
                 if (groups > 0) {
                     return buildSolution(smallArray,
                                          largeArray,
-                                         smallIndices,
-                                         largeIndices,
+                                         smallArrayIndices,
+                                         largeArrayIndices,
                                          blocks);
                 }
             } while (largeGenerator.inc());
