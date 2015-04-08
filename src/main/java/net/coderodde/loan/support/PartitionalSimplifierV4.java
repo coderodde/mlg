@@ -2,6 +2,7 @@ package net.coderodde.loan.support;
 
 import net.coderodde.loan.Simplifier;
 import net.coderodde.loan.Utilities;
+import static net.coderodde.loan.Utilities.checkIsGroup;
 
 /**
  * This simplifier generates the partition in "reversed" order: at the 
@@ -25,6 +26,8 @@ public class PartitionalSimplifierV4 extends Simplifier {
      */
     @Override
     public long[] simplify(long[] graph) {
+        checkIsGroup(graph);
+        
         if (graph.length == 0) {
             return graph.clone();
         }
@@ -55,11 +58,7 @@ public class PartitionalSimplifierV4 extends Simplifier {
         }
         
         result = append(result, data[SEMITRIVIAL_GROUPS_INDEX]);
-        
-        if (trivialGroupCount > 0) {
-            result = append(result, new long[trivialGroupCount]);
-        } 
-        
-        return result;   
+        result = append(result, new long[trivialGroupCount]);
+        return result;
     }
 }

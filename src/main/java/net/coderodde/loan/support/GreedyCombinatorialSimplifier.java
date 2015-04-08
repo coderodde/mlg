@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import net.coderodde.loan.Simplifier;
+import static net.coderodde.loan.Utilities.checkIsGroup;
 
 /**
  * This simplifier starts generating small combinations of nodes and whenever a
@@ -28,6 +29,8 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
      */
     @Override
     public long[] simplify(long[] graph) {
+        checkIsGroup(graph);
+        
         if (graph.length == 0) {
             return graph.clone();
         }
@@ -133,11 +136,7 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
         }
         
         result = append(result, data1[SEMITRIVIAL_GROUPS_INDEX]);
-        
-        if (trivialGroupCount > 0) {
-            result = append(result, new long[trivialGroupCount]);
-        } 
-        
+        result = append(result, new long[trivialGroupCount]);
         return result;
     }
     

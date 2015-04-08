@@ -116,4 +116,11 @@ public class Utilities {
             System.out.println();
         }
     }
+    
+    public static void checkIsGroup(final long[] graph) {
+        if (!isGroup(graph)) {
+            throw new IllegalArgumentException(
+                    "The input graph is not a group.");
+        }
+    }
 }

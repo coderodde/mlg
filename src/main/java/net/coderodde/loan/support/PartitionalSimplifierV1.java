@@ -1,6 +1,7 @@
 package net.coderodde.loan.support;
 
 import net.coderodde.loan.Simplifier;
+import static net.coderodde.loan.Utilities.checkIsGroup;
 
 /**
  * This simplifier implements a simplification algorithm, which splits the input
@@ -17,6 +18,8 @@ public class PartitionalSimplifierV1 extends Simplifier {
 
     @Override
     public long[] simplify(long[] graph) {
+        checkIsGroup(graph);
+        
         if (graph.length == 0) {
             return graph.clone();
         }
@@ -35,10 +38,7 @@ public class PartitionalSimplifierV1 extends Simplifier {
                         simplifyImpl(gs.positiveArray, gs.negativeArray) :
                         simplifyImpl(gs.negativeArray, gs.positiveArray);
         
-        if (trivialGroupCount > 0) {
-            result = append(result, new long[trivialGroupCount]);
-        } 
-        
+        result = append(result, new long[trivialGroupCount]);
         return result;
     }
 }

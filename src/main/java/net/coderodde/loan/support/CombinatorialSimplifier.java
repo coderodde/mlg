@@ -3,6 +3,7 @@ package net.coderodde.loan.support;
 import java.util.ArrayList;
 import java.util.List;
 import net.coderodde.loan.Simplifier;
+import static net.coderodde.loan.Utilities.checkIsGroup;
 
 /**
  * This simplifier seeks to divide the array in two subarrays in such a way,
@@ -14,16 +15,10 @@ import net.coderodde.loan.Simplifier;
  */
 public class CombinatorialSimplifier extends Simplifier {
     
-    private List<List<Long>> groupList;
-    
-    public CombinatorialSimplifier() {}
-    
-    private CombinatorialSimplifier(final List<List<Long>> groupList) {
-        this.groupList = groupList;
-    }
-    
     @Override
     public long[] simplify(long[] graph) {
+        checkIsGroup(graph);
+        
         if (graph.length == 0) {
             return graph.clone();
         }
@@ -48,9 +43,7 @@ public class CombinatorialSimplifier extends Simplifier {
         }
         // END: create the input list.
         
-        final Data data2 = initialList.isEmpty() ? 
-                           new Data() : 
-                           simplify(initialList);
+        final List<List<Long>> groupList = simplify(initialList);
         
         int index = 0;
         
@@ -58,18 +51,14 @@ public class CombinatorialSimplifier extends Simplifier {
                 new long[graph.length - trivialGroupCount 
                                       - data1[SEMITRIVIAL_GROUPS_INDEX].length];
         
-        for (final List<Long> list : data2.groupList) {
+        for (final List<Long> list : groupList) {
             for (final long l : list) {
                 result[index++] = l;
             }
         }
         
         result = append(result, data1[SEMITRIVIAL_GROUPS_INDEX]);
-        
-        if (trivialGroupCount > 0) {
-            result = append(result, new long[trivialGroupCount]);
-        } 
-        
+        result = append(result, new long[trivialGroupCount]);
         return result;
     } 
     
@@ -81,49 +70,37 @@ public class CombinatorialSimplifier extends Simplifier {
         }
     }
     
-    private Data simplify(final List<Long> list) {
-        if (list.isEmpty()) {
-            return new Data();
-        }
-        
-        if (!isGroup(list)) {
-            // The input list cannot be a group.
-            throw new IllegalStateException(
-                    "Should not happen: input list is not a group.");
-        }
-        
+    private List<List<Long>> simplify(final List<Long> list) {
         final boolean[] flags = new boolean[list.size()];
         final long combinationsToConsider = mypow(2L, flags.length) - 2L;
         
         flags[0] = true;
         int bestGroupCount = 0;
-        final Data ret = new Data();
+        final List<List<Long>> totalGroupList = new ArrayList<>();
         
         // Generate all ways of splitting the input list into two sublists.
         for (long l = 0L; l < combinationsToConsider; ++l, incFlags(flags)) {
             final List<Long>[] lists = split(list, flags);
             
             if (isGroup(lists[0]) && isGroup(lists[1])) {
-                final Data data0 = simplify(lists[0]);
-                final Data data1 = simplify(lists[1]);
-                final int groupCount = data0.groupList.size() + 
-                                       data1.groupList.size();
+                final List<List<Long>> groupList0 = simplify(lists[0]);
+                final List<List<Long>> groupList1 = simplify(lists[1]);
+                final int groupCount = groupList0.size() + groupList1.size();
                 
                 if (bestGroupCount < groupCount) {
                     bestGroupCount = groupCount;
-                    ret.groupList.clear();
-                    ret.groupList.addAll(data0.groupList);
-                    ret.groupList.addAll(data1.groupList);
+                    totalGroupList.clear();
+                    totalGroupList.addAll(groupList0);
+                    totalGroupList.addAll(groupList1);
                 }
             }
         }
         
-        if (ret.groupList.isEmpty()) {
-            final List<Long> retList = new ArrayList<>(list);
-            ret.groupList.add(retList);
+        if (totalGroupList.isEmpty()) {
+            totalGroupList.add(new ArrayList<>(list));
         }
         
-        return ret;
+        return totalGroupList;
     }
     
     private static List<Long>[] split(final List<Long> list, 
