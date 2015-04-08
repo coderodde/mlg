@@ -33,7 +33,15 @@ import net.coderodde.loan.support.SpecialPartitionGenerator;
  */
 public abstract class Simplifier {
     
+    /**
+     * The index for the array holding semi-trivial groups. Used in conjuction
+     * with <code>stripSemitrialGroups</code>.
+     */
     protected static final int SEMITRIVIAL_GROUPS_INDEX = 0;
+    
+    /**
+     * The index for the array holding non-trivial groups.
+     */
     protected static final int NONTRIVIAL_GROUPS_INDEX = 1;
     
     /**
@@ -113,6 +121,20 @@ public abstract class Simplifier {
         GraphSplit(final long[] positiveArray, final long[] negativeArray) {
             this.positiveArray = positiveArray;
             this.negativeArray = negativeArray;
+        }
+    }
+    
+    protected static class GroupSplit {
+        public final long[] trivialGroups;
+        public final long[] semitrivialGroups;
+        public final long[] nontrivialGroups;
+        
+        GroupSplit(final long[] trivialGroups,
+                   final long[] semitrivialGroups,
+                   final long[] nontrivialGroups) {
+            this.trivialGroups = trivialGroups;
+            this.semitrivialGroups = semitrivialGroups;
+            this.nontrivialGroups = nontrivialGroups;
         }
     }
     
@@ -264,6 +286,10 @@ public abstract class Simplifier {
         return ret;
     }
     
+    /**
+     * This class implements a group comparator using the absolute value of the
+     * sums as a comparison key.
+     */
     private static final class NodeListComparator 
     implements Comparator<List<Long>> {
 
@@ -361,7 +387,8 @@ public abstract class Simplifier {
     }
     
     /**
-     * Implements the algorithm for group maximization.
+     * Implements the algorithm for group maximization. Works in reversed 
+     * fashion: the first match is guaranteed to be optimal.
      * 
      * @param  smallArray    the smaller of the node arrays.
      * @param  largeArray    the larger of the node arrays.
@@ -403,6 +430,98 @@ public abstract class Simplifier {
         } while (smallGenerator.inc());
         
         throw new IllegalStateException("Should not get here.");
+    }
+    
+    protected static GroupSplit split2(final long[] graph) {
+        int trivialGroupCount = 0;
+        
+        for (final long l : graph) {
+            if (l == 0L) {
+                ++trivialGroupCount;
+            }
+        }
+        
+        final long[] trivialGroups = new long[trivialGroupCount];
+        final Map<Long, Integer> map = new HashMap<>();
+        
+        for (final long l : graph) {
+            if (l == 0L) {
+                // Skip trivial groups.
+                continue;
+            }
+            
+            if (!map.containsKey(l)) {
+                map.put(l, 1);
+            } else {
+                map.put(l, map.get(l) + 1);
+            }
+        }
+        
+        final List<Long> semitrivialNodeList = 
+                new ArrayList<>(graph.length - trivialGroupCount);
+        
+        final List<Long> nontrivialNodeList = 
+                new ArrayList<>(graph.length - trivialGroupCount);
+        
+        for (final long l : graph) {
+            if (l == 0L) {
+                // Skip trivial group once again.
+                continue;
+            }
+            
+            if (map.containsKey(l) && map.containsKey(-l)) {
+                final int minOccurrences = Math.min(map.get(l), map.get(-l));
+                
+                for (int i = 0; i < minOccurrences; ++i) {
+                    semitrivialNodeList.add(l);
+                    semitrivialNodeList.add(-l);
+                }
+                
+                map.put(l, map.get(l) - minOccurrences);
+                map.put(-l, map.get(-l) - minOccurrences);
+                
+                if (map.get(l) == 0) {
+                    map.remove(l);
+                }
+                
+                if (map.get(-l) == 0) {
+                    map.remove(-l);
+                }
+            } else if (map.containsKey(l)) {
+                for (int i = 0; i < map.get(l); ++i) {
+                    nontrivialNodeList.add(l);
+                }
+                
+                map.remove(l);
+            } else if (map.containsKey(-l)){
+                for (int i = 0; i < map.get(-l); ++i) {
+                    nontrivialNodeList.add(-l);
+                }
+                
+                map.remove(-l);
+            }
+        }
+        
+        final long[] semitrivialGroups = new long[semitrivialNodeList.size()];
+        final long[] nontrivialGroups = new long[nontrivialNodeList.size()];
+        
+        int index = 0;
+        
+        for (final long l : semitrivialNodeList) {
+            semitrivialGroups[index++] = l;
+        }
+        
+        index = 0;
+        
+        for (final long l : nontrivialNodeList) {
+            nontrivialGroups[index++] = l;
+        }
+            
+        final long[][] ret = new long[2][];
+        
+        return new GroupSplit(trivialGroups, 
+                              semitrivialGroups, 
+                              nontrivialGroups);
     }
     
     /**
@@ -499,6 +618,14 @@ public abstract class Simplifier {
         return ret;
     }
     
+    /**
+     * Sums those elements in <code>list</code> whose index is mentioned in
+     * <code>indices</code>.
+     * 
+     * @param  list    the list of elements.
+     * @param  indices the indices of elements to select.
+     * @return the sum of selected elements.
+     */
     protected static long sum(final List<Long> list, final int[] indices) {
         long sum = 0L;
         

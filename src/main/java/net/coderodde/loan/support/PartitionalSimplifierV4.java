@@ -27,38 +27,35 @@ public class PartitionalSimplifierV4 extends Simplifier {
     @Override
     public long[] simplify(long[] graph) {
         checkIsGroup(graph);
-        
+       
         if (graph.length == 0) {
             return graph.clone();
         }
         
-        final long[] array1 = stripTrivialGroups(graph);
-        final int trivialGroupCount = graph.length - array1.length;
+        final GroupSplit gs = split2(graph);
         
-        if (trivialGroupCount == graph.length) {
+        if (gs.trivialGroups.length == graph.length) {
             return graph.clone();
         }
         
-        final long[][] data = stripSemitrivialGroups(array1);
-        final GraphSplit gs = split(data[NONTRIVIAL_GROUPS_INDEX]);
-        
-        long[] result = new long[0];
-        
-        final int initialBlocks = 
-                Utilities.countGroups(data[NONTRIVIAL_GROUPS_INDEX]);
-        
-        if (gs.positiveArray.length > 0) {
-            result = gs.positiveArray.length < gs.negativeArray.length ?
-                            simplifyImplReversed(gs.positiveArray, 
-                                                 gs.negativeArray, 
-                                                 initialBlocks) :
-                            simplifyImplReversed(gs.negativeArray, 
-                                                 gs.positiveArray,
-                                                 initialBlocks);
+        if (gs.nontrivialGroups.length == 0) {
+            return append(gs.trivialGroups, gs.semitrivialGroups);
         }
         
-        result = append(result, data[SEMITRIVIAL_GROUPS_INDEX]);
-        result = append(result, new long[trivialGroupCount]);
+        final GraphSplit gs2 = split(gs.nontrivialGroups);
+        final int initialBlocks = 
+                Utilities.countGroups(gs.nontrivialGroups);
+        
+        long[] result = gs2.positiveArray.length < gs2.negativeArray.length ?
+                            simplifyImplReversed(gs2.positiveArray, 
+                                                 gs2.negativeArray,
+                                                 initialBlocks) :
+                            simplifyImplReversed(gs2.negativeArray, 
+                                                 gs2.positiveArray,
+                                                 initialBlocks);
+        
+        result = append(result, gs.trivialGroups);
+        result = append(result, gs.semitrivialGroups);
         return result;
     }
 }

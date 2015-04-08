@@ -24,21 +24,21 @@ public class PartitionalSimplifierV1 extends Simplifier {
             return graph.clone();
         }
         
-        final long[] array1 = stripTrivialGroups(graph);
-        final int trivialGroupCount = graph.length - array1.length;
+        final GroupSplit gs = split2(graph);
         
-        if (trivialGroupCount == graph.length) {
+        if (gs.trivialGroups.length == graph.length) {
             return graph.clone();
         }
         
-        final GraphSplit gs = split(array1);
+        final GraphSplit gs2 = split(append(gs.nontrivialGroups, 
+                                            gs.semitrivialGroups));
         
-        long[] result = 
-                gs.positiveArray.length < gs.negativeArray.length ?
-                        simplifyImpl(gs.positiveArray, gs.negativeArray) :
-                        simplifyImpl(gs.negativeArray, gs.positiveArray);
+        long[] result = gs2.positiveArray.length < gs2.negativeArray.length ?
+                        simplifyImpl(gs2.positiveArray, gs2.negativeArray) :
+                        simplifyImpl(gs2.negativeArray, gs2.positiveArray);
         
-        result = append(result, new long[trivialGroupCount]);
+        
+        result = append(result, gs.trivialGroups);
         return result;
     }
 }

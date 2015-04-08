@@ -23,7 +23,7 @@ public class Demo {
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 20;
+    private static final int LENGTH = 16;
     
     /**
      * The minimum arc weight.

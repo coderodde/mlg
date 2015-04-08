@@ -23,42 +23,41 @@ public class CombinatorialSimplifier extends Simplifier {
             return graph.clone();
         }
         
+        final GroupSplit gs = split2(graph);
+        
         final long[] array1 = stripTrivialGroups(graph);
         final int trivialGroupCount = graph.length - array1.length;
         
         // If the graph consists of only trivial groups, return.
-        if (trivialGroupCount == graph.length) {
+        if (gs.trivialGroups.length == graph.length) {
             return graph.clone();
         }
         
-        // Remove semi-trivial groups.
-        final long[][] data1 = stripSemitrivialGroups(array1);
-        
         // BEGIN: create the input list.
         final List<Long> initialList = 
-                new ArrayList<>(data1[NONTRIVIAL_GROUPS_INDEX].length);
+                new ArrayList<>(gs.nontrivialGroups.length);
         
-        for (final Long l : data1[NONTRIVIAL_GROUPS_INDEX]) {
+        for (final Long l : gs.nontrivialGroups) {
             initialList.add(l);
         }
         // END: create the input list.
         
-        final List<List<Long>> groupList = simplify(initialList);
+        List<List<Long>> groupList;
+        long[] result = new long[gs.nontrivialGroups.length];
         
-        int index = 0;
-        
-        long[] result = 
-                new long[graph.length - trivialGroupCount 
-                                      - data1[SEMITRIVIAL_GROUPS_INDEX].length];
-        
-        for (final List<Long> list : groupList) {
-            for (final long l : list) {
-                result[index++] = l;
+        if (!initialList.isEmpty()) {
+            groupList = simplify(initialList);
+            int index = 0;
+
+            for (final List<Long> list : groupList) {
+                for (final long l : list) {
+                    result[index++] = l;
+                }
             }
         }
         
-        result = append(result, data1[SEMITRIVIAL_GROUPS_INDEX]);
-        result = append(result, new long[trivialGroupCount]);
+        result = append(result, gs.trivialGroups);
+        result = append(result, gs.semitrivialGroups);
         return result;
     } 
     

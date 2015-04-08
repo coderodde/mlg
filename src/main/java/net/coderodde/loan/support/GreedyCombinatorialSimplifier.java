@@ -35,29 +35,31 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
             return graph.clone();
         }
         
-        final long[] array1 = stripTrivialGroups(graph);
-        final int trivialGroupCount = graph.length - array1.length;
+        final GroupSplit gs = split2(graph);
         
         // If the graph consists of only trivial groups, return.
-        if (trivialGroupCount == graph.length) {
+        if (gs.trivialGroups.length == graph.length) {
             return graph.clone();
         }
         
-        // Remove semi-trivial groups.
-        final long[][] data1 = stripSemitrivialGroups(array1);
-        final GraphSplit gs = split(data1[NONTRIVIAL_GROUPS_INDEX]);
+        if (gs.nontrivialGroups.length == 0) {
+            return append(gs.trivialGroups, gs.semitrivialGroups);
+        }
+        
+        // Split the nontrivial group nodes in positive and negative.
+        final GraphSplit graphSplit = split(gs.nontrivialGroups);
         
         final List<Long> positiveList = 
-                new ArrayList<>(gs.positiveArray.length);
+                new ArrayList<>(graphSplit.positiveArray.length);
         
         final List<Long> negativeList =
-                new ArrayList<>(gs.negativeArray.length);
+                new ArrayList<>(graphSplit.negativeArray.length);
         
-        for (final long l : gs.positiveArray) {
+        for (final long l : graphSplit.positiveArray) {
             positiveList.add(l);
         }
         
-        for (final long l : gs.negativeArray) {
+        for (final long l : graphSplit.negativeArray) {
             //// Put the absolute values instead!
             negativeList.add(-l);
         }
@@ -124,9 +126,7 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
         
         int index = 0;
         
-        long[] result = 
-                new long[graph.length - trivialGroupCount 
-                                      - data1[SEMITRIVIAL_GROUPS_INDEX].length];
+        long[] result = new long[gs.nontrivialGroups.length];
         
         // Build the solution array.
         for (final List<Long> group : groupList) {
@@ -135,8 +135,8 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
             }
         }
         
-        result = append(result, data1[SEMITRIVIAL_GROUPS_INDEX]);
-        result = append(result, new long[trivialGroupCount]);
+        result = append(result, gs.trivialGroups);
+        result = append(result, gs.semitrivialGroups);
         return result;
     }
     
