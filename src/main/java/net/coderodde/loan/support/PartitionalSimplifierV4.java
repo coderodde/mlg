@@ -32,7 +32,7 @@ public class PartitionalSimplifierV4 extends Simplifier {
             return graph.clone();
         }
         
-        final GroupSplit gs = split2(graph);
+        final GroupSplit gs = split(graph);
         
         if (gs.trivialGroups.length == graph.length) {
             return graph.clone();
@@ -42,7 +42,7 @@ public class PartitionalSimplifierV4 extends Simplifier {
             return append(gs.trivialGroups, gs.semitrivialGroups);
         }
         
-        final GraphSplit gs2 = split(gs.nontrivialGroups);
+        final GraphSplit gs2 = splitBySign(gs.nontrivialGroups);
         final int initialBlocks = 
                 Utilities.countGroups(gs.nontrivialGroups);
         

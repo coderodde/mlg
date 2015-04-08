@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import static net.coderodde.loan.Utilities.isGroup;
 import net.coderodde.loan.support.GeneralPartitionGenerator;
 import net.coderodde.loan.support.ReversedGeneralPartitionGenerator;
 import net.coderodde.loan.support.SpecialPartitionGenerator;
@@ -32,17 +33,6 @@ import net.coderodde.loan.support.SpecialPartitionGenerator;
  * @version 1.6
  */
 public abstract class Simplifier {
-    
-    /**
-     * The index for the array holding semi-trivial groups. Used in conjuction
-     * with <code>stripSemitrialGroups</code>.
-     */
-    protected static final int SEMITRIVIAL_GROUPS_INDEX = 0;
-    
-    /**
-     * The index for the array holding non-trivial groups.
-     */
-    protected static final int NONTRIVIAL_GROUPS_INDEX = 1;
     
     /**
      * The comparator for sorting the groups.
@@ -79,38 +69,6 @@ public abstract class Simplifier {
     public abstract long[] simplify(final long[] graph);
     
     /**
-     * Returns the same graph, but with trivial groups removed.
-     * 
-     * @param  graph the graph to rid of zero elements.
-     * @return a copy of <code>graph</code> without trivial groups.
-     */
-    protected static long[] stripTrivialGroups(final long[] graph) {
-        int trivialGroups = 0;
-        
-        for (final long l : graph) {
-            if (l == 0L) {
-                ++trivialGroups;
-            }
-        }
-        
-        if (trivialGroups == 0) {
-            return graph.clone();
-        }
-        
-        final long[] ret = new long[graph.length - trivialGroups];
-        
-        int index = 0;
-        
-        for (final long l : graph) {
-            if (l != 0L) {
-                ret[index++] = l;
-            }
-        }
-        
-        return ret;
-    }
-    
-    /**
      * Holds a partition of a graph into array of positive nodes and an array
      * of negative nodes.
      */
@@ -124,6 +82,10 @@ public abstract class Simplifier {
         }
     }
     
+    /**
+     * Holds a partition of a graph to trivial, semi-trivial and non-trivial
+     * groups.
+     */
     protected static class GroupSplit {
         public final long[] trivialGroups;
         public final long[] semitrivialGroups;
@@ -144,7 +106,7 @@ public abstract class Simplifier {
      * @param  graph the graph to split.
      * @return a graph split.
      */
-    protected static GraphSplit split(final long[] graph) {
+    protected static GraphSplit splitBySign(final long[] graph) {
         int positiveCount = 0;
         int negativeCount = 0;
         
@@ -310,6 +272,99 @@ public abstract class Simplifier {
     }
     
     /**
+     * Implements the combinatorial search for groups.
+     * 
+     * @param  list the node list to partition.
+     * @return the list of groups.
+     */
+    protected List<List<Long>> simplify(final List<Long> list) {
+        final boolean[] flags = new boolean[list.size()];
+        final long combinationsToConsider = mypow(2L, flags.length) - 2L;
+        
+        flags[0] = true;
+        int bestGroupCount = 0;
+        final List<List<Long>> totalGroupList = new ArrayList<>();
+        
+        // Generate all ways of splitting the input list into two sublists.
+        for (long l = 0L; l < combinationsToConsider; ++l, incFlags(flags)) {
+            final List<Long>[] lists = split(list, flags);
+            
+            if (isGroup(lists[0]) && isGroup(lists[1])) {
+                final List<List<Long>> groupList0 = simplify(lists[0]);
+                final List<List<Long>> groupList1 = simplify(lists[1]);
+                final int groupCount = groupList0.size() + groupList1.size();
+                
+                if (bestGroupCount < groupCount) {
+                    bestGroupCount = groupCount;
+                    totalGroupList.clear();
+                    totalGroupList.addAll(groupList0);
+                    totalGroupList.addAll(groupList1);
+                }
+            }
+        }
+        
+        if (totalGroupList.isEmpty()) {
+            totalGroupList.add(new ArrayList<>(list));
+        }
+        
+        return totalGroupList;
+    }
+    
+    /**
+     * Splits the list in two sublists. If <code>flags[i] == true</code>, the
+     * element <code>list.get(i)</code> will go one list, if 
+     * <code>flags[i] == false</code>, it will go to another.
+     * 
+     * @param list  the list to split.
+     * @param flags the flags.
+     * @return      two lists.
+     */
+    protected static List<Long>[] split(final List<Long> list, 
+                                        final boolean[] flags) {
+        final List<Long> lista = new ArrayList<>(list.size());
+        final List<Long> listb = new ArrayList<>(list.size());
+        
+        for (int i = 0; i < flags.length; ++i) {
+            (flags[i] ? lista : listb).add(list.get(i));
+        }
+        
+        return new List[]{lista, listb};
+    }
+    
+    /**
+     * Increments the integer represented by <code>flags</code>.
+     * 
+     * @param flags the flag structure to increment.
+     */
+    protected static void incFlags(final boolean[] flags) {
+        for (int i = 0; i < flags.length; ++i) {
+            if (flags[i]) {
+                flags[i] = false;
+            } else {
+                flags[i] = true;
+                return;
+            }
+        }
+    }
+    
+    /**
+     * Returns <code>a</code> raised to the power of <code>b</code>.
+     * 
+     * @param  a the number.
+     * @param  b the exponent.
+     * @return <code>a^b</code>.
+     */
+    protected static long mypow(final long a, final long b) {
+        long tmp = 1L;
+        
+        for (long i = 0; i < b; ++i) {
+            tmp *= a;
+        }
+        
+        return tmp;
+    }
+    
+    /**
      * Implements the algorithm for group maximization.
      * 
      * @param  smallArray the smaller of the node arrays.
@@ -432,7 +487,13 @@ public abstract class Simplifier {
         throw new IllegalStateException("Should not get here.");
     }
     
-    protected static GroupSplit split2(final long[] graph) {
+    /**
+     * Splits the input graph into trivial, semi-trivial and non-trivial groups.
+     * 
+     * @param  graph the graph to split.
+     * @return the graph partition.
+     */
+    protected static GroupSplit split(final long[] graph) {
         int trivialGroupCount = 0;
         
         for (final long l : graph) {
@@ -522,85 +583,6 @@ public abstract class Simplifier {
         return new GroupSplit(trivialGroups, 
                               semitrivialGroups, 
                               nontrivialGroups);
-    }
-    
-    /**
-     * Splits the input graph into to arrays: one containing only semi-trivial 
-     * groups, and another one containing non-trivial groups.
-     * 
-     * @param  graph the graph from which to extract the semi-trivial groups.
-     * @return       two arrays: one for semi-trivial nodes, and another for 
-     *               non-trivial groups.
-     */
-    protected static long[][] stripSemitrivialGroups(final long[] graph) {
-        final Map<Long, Integer> map = new HashMap<>();
-        
-        for (final long l : graph) {
-            if (!map.containsKey(l)) {
-                map.put(l, 1);
-            } else {
-                map.put(l, map.get(l) + 1);
-            }
-        }
-        
-        final List<Long> semitrivialNodeList = new ArrayList<>(graph.length);
-        final List<Long> nontrivialNodeList = new ArrayList<>(graph.length);
-        
-        for (final long l : graph) {
-            if (map.containsKey(l) && map.containsKey(-l)) {
-                final int minOccurrences = Math.min(map.get(l), map.get(-l));
-                
-                for (int i = 0; i < minOccurrences; ++i) {
-                    semitrivialNodeList.add(l);
-                    semitrivialNodeList.add(-l);
-                }
-                
-                map.put(l, map.get(l) - minOccurrences);
-                map.put(-l, map.get(-l) - minOccurrences);
-                
-                if (map.get(l) == 0) {
-                    map.remove(l);
-                }
-                
-                if (map.get(-l) == 0) {
-                    map.remove(-l);
-                }
-            } else if (map.containsKey(l)) {
-                for (int i = 0; i < map.get(l); ++i) {
-                    nontrivialNodeList.add(l);
-                }
-                
-                map.remove(l);
-            } else if (map.containsKey(-l)){
-                for (int i = 0; i < map.get(-l); ++i) {
-                    nontrivialNodeList.add(-l);
-                }
-                
-                map.remove(-l);
-            }
-        }
-        
-        final long[] semitrivialArray = new long[semitrivialNodeList.size()];
-        final long[] nontrivialArray = new long[nontrivialNodeList.size()];
-        
-        int index = 0;
-        
-        for (final long l : semitrivialNodeList) {
-            semitrivialArray[index++] = l;
-        }
-        
-        index = 0;
-        
-        for (final long l : nontrivialNodeList) {
-            nontrivialArray[index++] = l;
-        }
-            
-        final long[][] ret = new long[2][];
-        
-        ret[SEMITRIVIAL_GROUPS_INDEX] = semitrivialArray;
-        ret[NONTRIVIAL_GROUPS_INDEX] = nontrivialArray;
-        
-        return ret;
     }
     
     /**

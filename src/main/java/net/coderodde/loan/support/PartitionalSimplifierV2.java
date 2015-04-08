@@ -21,7 +21,7 @@ public class PartitionalSimplifierV2 extends Simplifier {
             return graph.clone();
         }
         
-        final GroupSplit gs = split2(graph);
+        final GroupSplit gs = split(graph);
         
         if (gs.trivialGroups.length == graph.length) {
             return graph.clone();
@@ -31,7 +31,7 @@ public class PartitionalSimplifierV2 extends Simplifier {
             return append(gs.trivialGroups, gs.semitrivialGroups);
         }
         
-        final GraphSplit gs2 = split(gs.nontrivialGroups);
+        final GraphSplit gs2 = splitBySign(gs.nontrivialGroups);
         
         long[] result = gs2.positiveArray.length < gs2.negativeArray.length ?
                         simplifyImpl(gs2.positiveArray, gs2.negativeArray) :

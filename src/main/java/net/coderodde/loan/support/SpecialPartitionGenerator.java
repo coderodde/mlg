@@ -87,6 +87,12 @@ public class SpecialPartitionGenerator {
         return s;
     }
     
+    /**
+     * Checks the size of the set and amount of blocks for sanity.
+     * 
+     * @param n the size of the set being partitioned.
+     * @param k the amount of partition blocks.
+     */
     private void check(final int n, final int k) {
         if (n < 1) {
             throw new IllegalArgumentException("'n' < 1.");

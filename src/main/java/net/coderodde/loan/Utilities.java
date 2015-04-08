@@ -1,5 +1,6 @@
 package net.coderodde.loan;
 
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -77,6 +78,22 @@ public class Utilities {
     }
     
     /**
+     * Checks that the input list is a group.
+     * 
+     * @param  list the list to check.
+     * @return <code>true</code> if <code>list</code> is a group.
+     */
+    public static final boolean isGroup(final List<Long> list) {
+        long sum = 0L;
+        
+        for (final long l : list) {
+            sum += l;
+        }
+        
+        return sum == 0L;
+    }
+    
+    /**
      * Counts the amount of integer substrings summing to zero.
      * 
      * @param  array the array to process.
@@ -107,6 +124,11 @@ public class Utilities {
         return count;
     }
     
+    /**
+     * Prints a graph if it is not too large.
+     * 
+     * @param graph the graph to print.
+     */
     public static void print(final long[] graph) {
         if (graph.length <= MAX_GRAPH_SIZE_FOR_PRINT) {
             for (final long l : graph) {
@@ -117,6 +139,13 @@ public class Utilities {
         }
     }
     
+    /**
+     * Checks that <code>graph</code> is a group, and if it is not, throws an
+     * exception.
+     * 
+     * @param graph the graph to check.
+     * @exception IllegalArgumentException if the input graph is not a group.
+     */
     public static void checkIsGroup(final long[] graph) {
         if (!isGroup(graph)) {
             throw new IllegalArgumentException(

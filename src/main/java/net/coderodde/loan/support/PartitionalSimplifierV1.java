@@ -24,13 +24,13 @@ public class PartitionalSimplifierV1 extends Simplifier {
             return graph.clone();
         }
         
-        final GroupSplit gs = split2(graph);
+        final GroupSplit gs = split(graph);
         
         if (gs.trivialGroups.length == graph.length) {
             return graph.clone();
         }
         
-        final GraphSplit gs2 = split(append(gs.nontrivialGroups, 
+        final GraphSplit gs2 = splitBySign(append(gs.nontrivialGroups, 
                                             gs.semitrivialGroups));
         
         long[] result = gs2.positiveArray.length < gs2.negativeArray.length ?

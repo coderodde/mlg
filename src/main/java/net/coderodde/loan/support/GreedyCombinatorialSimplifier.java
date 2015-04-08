@@ -35,7 +35,7 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
             return graph.clone();
         }
         
-        final GroupSplit gs = split2(graph);
+        final GroupSplit gs = split(graph);
         
         // If the graph consists of only trivial groups, return.
         if (gs.trivialGroups.length == graph.length) {
@@ -47,7 +47,7 @@ public class GreedyCombinatorialSimplifier extends Simplifier {
         }
         
         // Split the nontrivial group nodes in positive and negative.
-        final GraphSplit graphSplit = split(gs.nontrivialGroups);
+        final GraphSplit graphSplit = splitBySign(gs.nontrivialGroups);
         
         final List<Long> positiveList = 
                 new ArrayList<>(graphSplit.positiveArray.length);

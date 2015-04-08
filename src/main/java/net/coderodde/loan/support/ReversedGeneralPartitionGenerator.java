@@ -92,6 +92,11 @@ public class ReversedGeneralPartitionGenerator {
         return k;
     }
 
+    /**
+     * Checks that the set being partitioned is not empty.
+     * 
+     * @param n the size of the set being partitioned.
+     */
     private void check(final int n) {
         if (n < 1) {
             throw new IllegalArgumentException("'n' < 1.");

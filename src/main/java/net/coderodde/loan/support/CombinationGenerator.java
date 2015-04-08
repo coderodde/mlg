@@ -8,6 +8,9 @@ package net.coderodde.loan.support;
  */
 public class CombinationGenerator {
 
+    /**
+     * The minimum size of a set to index.
+     */
     private static final int MINIMUM_SIZE = 1;
 
     /**
@@ -40,8 +43,7 @@ public class CombinationGenerator {
     }
 
     /**
-     * Returns next index list or <code>null</code> if all possible combination
-     * indices were generated.
+     * Attempts to generate the next combination.
      *     
      * @return <code>true</code> if the next combination was successfully 
      *         generated, <code>false</code> if there is no more combinations.
@@ -86,14 +88,30 @@ public class CombinationGenerator {
         return true;
     }
 
+    /**
+     * Returns the combination indices.
+     * 
+     * @return the indices for the current combination.
+     */
     public int[] getIndices() {
         return indices;
     }
     
+    /**
+     * Returns the size of the current combination.
+     * 
+     * @return the size of the current combination.
+     */
     public int getk() {
         return k;
     }
 
+    /**
+     * Returns <code>true</code> if there is no gaps between two consecutive 
+     * indices.
+     * 
+     * @return <code>true</code> if the indices have no gaps.
+     */
     public boolean hasNoGaps() {
         for (int i = 0; i < k - 1; ++i) {
             if (indices[i] + 1 != indices[i + 1]) {
@@ -104,11 +122,17 @@ public class CombinationGenerator {
         return true;
     }
 
+    /**
+     * Resets this combination generator.
+     */
     public void reset() {
         k = 1;
         indices = new int[]{-1};
     }
 
+    /**
+     * "Removes" the current combination.
+     */
     public void remove() {
         final int oldn = n;
         
@@ -158,6 +182,11 @@ public class CombinationGenerator {
         }
     }
 
+    /**
+     * Checks that the set size is not too small.
+     * 
+     * @param n the size of a set for which to generate the combinations.
+     */
     private void checkSize(final int n) {
         if (n < MINIMUM_SIZE) {
             throw new IllegalArgumentException(
