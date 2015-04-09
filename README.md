@@ -1,4 +1,4 @@
-# mlg - minimum loan graph
+# mlg - minimal loan graph
 ## Introduction
 Suppose you have a graph, whose nodes represent banks, individuals, companies, and whenever one party lends dough *D* to another party, we put a directed edge (also, an "arc") from lender to the debtor into the graph and assign *D* as the weight of that arc. Next, suppose all parties decide to pay their debts at one and the same moment. In the worst case, there might be quadratic amount of arcs with respect to the amount of nodes in the graph. So the problem statement is: how can we minimize the amount of arcs while retaining the equities of each node?
 ***mlg*** is a Java framework providing for **6** different algorithms for minimizing the amount of arcs. 3 of them are experimental (they work and correctly, but are not most efficient):
