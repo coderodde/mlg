@@ -34,7 +34,7 @@ mvn exec:java
 ```
 
 ## Using the algorithms
-```
+```java
 final long[] graph = getYourGraph();
 final long[] solution = new PartitionalSimplifierV4().simplify(graph);
 // Other simplifiers obey the same API.
