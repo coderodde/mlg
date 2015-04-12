@@ -349,6 +349,11 @@ public abstract class Simplifier {
         return totalGroupList;
     }
     
+    protected List<List<Long>> simplifyV3(final List<Long> list) {
+        final boolean[] flags1 = new boolean[3];
+        return null;
+    }
+    
     /**
      * Splits the list in two sublists. If <code>flags[i] == true</code>, the
      * element <code>list.get(i)</code> will go one list, if 

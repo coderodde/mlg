@@ -149,8 +149,6 @@ public class CombinationGenerator {
             for (int i = 0; i < k; ++i) {
                 indices[i] = i;
             }
-            
-            --indices[k - 1];
         } else if (n == k) {
             if (indices[0] == 0) {
                 for (int i = 0; i < k - 1; ++i) {
@@ -177,9 +175,8 @@ public class CombinationGenerator {
                     indices[i] = j;
                 }
             }
-            
-            --indices[k - 1];
         }
+        --indices[k - 1];
     }
 
     /**
