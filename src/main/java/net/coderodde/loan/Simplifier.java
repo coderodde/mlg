@@ -398,8 +398,6 @@ public abstract class Simplifier {
                              skip);
         }
         
-        String s = "";
-        
         /**
          * Runs the actual simplification.
          */
@@ -411,11 +409,6 @@ public abstract class Simplifier {
             if (allzero(flags)) {
                 flags[0] = true;
             }
-            
-            for (int i = 0; i < flags.length; ++i) {
-                s += flags[i] ? "1" : "0";
-            }
-            
             
             int bestGroupCount = 0;
             final List<List<Long>> totalGroupList = new ArrayList<>();
@@ -470,13 +463,11 @@ public abstract class Simplifier {
         
         final int powerOfTwo = ceilToPowerOfTwo(coreAmount);
         final int bits = intLog2(coreAmount);
-        System.out.println("Bits: " + bits);
         
         if (list.size() - 1 - bits <= MAXIMUM_SERIAL_LOAD) {
             return simplifyV2(list);
         }
         
-        System.out.println("Threads: " + powerOfTwo);
         final CombinatorialSimplifierThread[] threads = 
                 new CombinatorialSimplifierThread[powerOfTwo];
         final boolean[] varFlags = new boolean[bits];
@@ -511,15 +502,11 @@ public abstract class Simplifier {
             }
         }
         
-        for (final CombinatorialSimplifierThread t : threads) {
-            System.out.println(t.s);
-        }
-        
         return best;
     }
     
     /**
-     * Ceils up <code>num</code> to the nearest power of two.
+     * Ceils <code>num</code> to the nearest power of two.
      * 
      * @param  num the number to ceil.
      * @return nearest power of two equal or larger than <code>num</code>.

@@ -25,7 +25,7 @@ public class Demo {
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 20;
+    private static final int LENGTH = 24;
     
     /**
      * The minimum arc weight.
@@ -63,13 +63,13 @@ public class Demo {
         System.out.println();
         
         profile(new GreedyCombinatorialSimplifier(), graph);
-        profile(new CombinatorialSimplifierV1(), graph);
+//        profile(new CombinatorialSimplifierV1(), graph);
         profile(new CombinatorialSimplifierV2(), graph);
         profile(new CombinatorialSimplifierV3(), graph);
-        profile(new PartitionalSimplifierV1(), graph);
-        profile(new PartitionalSimplifierV2(), graph);
-        profile(new PartitionalSimplifierV3(), graph);
-        profile(new PartitionalSimplifierV4(), graph);
+//        profile(new PartitionalSimplifierV1(), graph);
+//        profile(new PartitionalSimplifierV2(), graph);
+//        profile(new PartitionalSimplifierV3(), graph);
+//        profile(new PartitionalSimplifierV4(), graph);
     }
     
     /**
