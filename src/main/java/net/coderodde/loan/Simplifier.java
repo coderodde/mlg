@@ -35,6 +35,12 @@ import net.coderodde.loan.support.SpecialPartitionGenerator;
 public abstract class Simplifier {
     
     /**
+     * Specifies the minimum amount of nodes to process in the parallel 
+     * combinatorial simplifier.
+     */
+    private static final int MINIMUM_THREAD_LOAD = 10;
+    
+    /**
      * The comparator for sorting the groups.
      */
     private static final NodeListComparator nodeListComparator = 
@@ -349,9 +355,127 @@ public abstract class Simplifier {
         return totalGroupList;
     }
     
+    protected class CombinatorialSimplifierThread extends Thread {
+        
+        /**
+         * The amount of most-significant bits to skip.
+         */
+        private final int skip;
+        
+        /**
+         * The input list.
+         */
+        private final List<Long> input;
+        
+        /**
+         * The output list consisting of groups.
+         */
+        private final List<List<Long>> output;
+        
+        /**
+         * Creates a new simplification thread. Relies on combinatorial 
+         * approach.
+         * 
+         * @param input the input list. Must be a group.
+         * @param skip  the amount of most-significant bits to ignore.
+         */
+        CombinatorialSimplifierThread(final List<Long> input, final int skip) {
+            this.input = input;
+            this.skip = skip;
+            this.output = new ArrayList<>();
+        }
+        
+        /**
+         * Runs the actual simplification.
+         */
+        @Override
+        public void run() {
+            final boolean[] flags = new boolean[input.size()];
+            final long combinationsToConsider = 
+                    mypow(2L, flags.length - skip - 1) - 1L;
+
+            flags[0] = true;
+            int bestGroupCount = 0;
+            final List<List<Long>> totalGroupList = new ArrayList<>();
+
+            // Generate all ways of splitting the input list into two sublists.
+            for (long l = 0L; l < combinationsToConsider; ++l, incFlags(flags)) {
+                final List<Long>[] lists = split(input, flags);
+
+                if (isGroup(lists[0]) && isGroup(lists[1])) {
+                    final List<List<Long>> groupList0 = simplify(lists[0]);
+                    final List<List<Long>> groupList1 = simplify(lists[1]);
+                    final int groupCount = groupList0.size() + groupList1.size();
+
+                    if (bestGroupCount < groupCount) {
+                        bestGroupCount = groupCount;
+                        totalGroupList.clear();
+                        totalGroupList.addAll(groupList0);
+                        totalGroupList.addAll(groupList1);
+                    }
+                }
+            }
+
+            if (totalGroupList.isEmpty()) {
+                output.add(new ArrayList<>(input));
+            }
+        }
+        
+        public List<List<Long>> getResult() {
+            return output;
+        }
+    }
+    
     protected List<List<Long>> simplifyV3(final List<Long> list) {
-        final boolean[] flags1 = new boolean[3];
+        final int coreAmount = Runtime.getRuntime().availableProcessors();
+        
+        if (coreAmount < 2) {
+            return simplifyV2(list);
+        }
+        
+        final int powerOfTwo = ceilToPowerOfTwo(coreAmount);
+        final int logCoreAmount = intLog2(coreAmount);
+        
+        if (list.size() - 1 - logCoreAmount < MINIMUM_THREAD_LOAD) {
+            return simplifyV2(list);
+        }
+        
+        System.out.println("Threads: " + powerOfTwo);
+        final CombinatorialSimplifierThread[] threads = 
+                new CombinatorialSimplifierThread[powerOfTwo];
         return null;
+    }
+    
+    /**
+     * Ceils up <code>num</code> to the nearest power of two.
+     * 
+     * @param  num the number to ceil.
+     * @return nearest power of two equal or larger than <code>num</code>.
+     */
+    protected static int ceilToPowerOfTwo(final int num) {
+        int s = 1;
+        
+        while (s < num) {
+            s <<= 1;
+        }
+        
+        return s;
+    }
+    
+    /**
+     * Returns a base 2 logarithm, ceiled towards the nearest integer.
+     * 
+     * @param  num the number whose logarithm to compute.
+     * @return     logarithm of <code>num</code>.
+     */
+    protected static int intLog2(final int num) {
+        int s = 1;
+        
+        while (s < num) {
+            s <<= 1;
+        }
+        
+        return Integer.numberOfTrailingZeros(s);
     }
     
     /**

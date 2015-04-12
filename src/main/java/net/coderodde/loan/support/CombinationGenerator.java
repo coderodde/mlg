@@ -176,6 +176,7 @@ public class CombinationGenerator {
                 }
             }
         }
+        
         --indices[k - 1];
     }
 

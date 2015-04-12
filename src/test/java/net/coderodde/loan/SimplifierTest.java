@@ -6,6 +6,7 @@ import java.util.List;
 import net.coderodde.loan.Simplifier.GraphSplit;
 import net.coderodde.loan.Simplifier.GroupSplit;
 import static net.coderodde.loan.Simplifier.append;
+import static net.coderodde.loan.Simplifier.intLog2;
 import static net.coderodde.loan.Simplifier.mypow;
 import static net.coderodde.loan.Simplifier.split;
 import static net.coderodde.loan.Simplifier.splitBySign;
@@ -36,6 +37,19 @@ public class SimplifierTest {
         assertEquals(-3, gs.nontrivialGroups[0]);
         assertEquals(1, gs.nontrivialGroups[1]);
         assertEquals(2, gs.nontrivialGroups[2]);
+    }
+    
+    @Test
+    public void testIntLog2() {
+        assertEquals(0, intLog2(1));
+        assertEquals(1, intLog2(2));
+        assertEquals(2, intLog2(3));
+        assertEquals(2, intLog2(4));
+        assertEquals(3, intLog2(5));
+        assertEquals(3, intLog2(6));
+        assertEquals(3, intLog2(7));
+        assertEquals(3, intLog2(8));
+        assertEquals(4, intLog2(9));
     }
     
     @Test
