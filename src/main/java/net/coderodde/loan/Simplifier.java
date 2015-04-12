@@ -38,7 +38,7 @@ public abstract class Simplifier {
      * Specifies the minimum amount of nodes to process in the parallel 
      * combinatorial simplifier.
      */
-    private static final int MINIMUM_THREAD_LOAD = 10;
+    private static final int MAXIMUM_SERIAL_LOAD = 10;
     
     /**
      * The comparator for sorting the groups.
@@ -358,7 +358,12 @@ public abstract class Simplifier {
     protected class CombinatorialSimplifierThread extends Thread {
         
         /**
-         * The amount of most-significant bits to skip.
+         * The combination choice flags.
+         */
+        private final boolean[] flags;
+        
+        /**
+         * Amount of most-significant bits to ignore.
          */
         private final int skip;
         
@@ -379,10 +384,18 @@ public abstract class Simplifier {
          * @param input the input list. Must be a group.
          * @param skip  the amount of most-significant bits to ignore.
          */
-        CombinatorialSimplifierThread(final List<Long> input, final int skip) {
+        CombinatorialSimplifierThread(final List<Long> input, 
+                                      final boolean[] flags) {
+            this.skip = flags.length;
+            this.flags = new boolean[input.size()];
             this.input = input;
-            this.skip = skip;
             this.output = new ArrayList<>();
+            
+            System.arraycopy(flags, 
+                             0, 
+                             this.flags, 
+                             this.flags.length - 1 - skip, 
+                             skip);
         }
         
         /**
@@ -390,7 +403,6 @@ public abstract class Simplifier {
          */
         @Override
         public void run() {
-            final boolean[] flags = new boolean[input.size()];
             final long combinationsToConsider = 
                     mypow(2L, flags.length - skip - 1) - 1L;
 
@@ -405,7 +417,8 @@ public abstract class Simplifier {
                 if (isGroup(lists[0]) && isGroup(lists[1])) {
                     final List<List<Long>> groupList0 = simplify(lists[0]);
                     final List<List<Long>> groupList1 = simplify(lists[1]);
-                    final int groupCount = groupList0.size() + groupList1.size();
+                    final int groupCount = groupList0.size() + 
+                                           groupList1.size();
 
                     if (bestGroupCount < groupCount) {
                         bestGroupCount = groupCount;
@@ -418,6 +431,8 @@ public abstract class Simplifier {
 
             if (totalGroupList.isEmpty()) {
                 output.add(new ArrayList<>(input));
+            } else {
+                output.addAll(totalGroupList);
             }
         }
         
@@ -434,16 +449,49 @@ public abstract class Simplifier {
         }
         
         final int powerOfTwo = ceilToPowerOfTwo(coreAmount);
-        final int logCoreAmount = intLog2(coreAmount);
+        final int bits = intLog2(coreAmount);
+        System.out.println("Bits: " + bits);
         
-        if (list.size() - 1 - logCoreAmount < MINIMUM_THREAD_LOAD) {
+        if (list.size() - 1 - bits <= MAXIMUM_SERIAL_LOAD) {
             return simplifyV2(list);
         }
         
         System.out.println("Threads: " + powerOfTwo);
         final CombinatorialSimplifierThread[] threads = 
                 new CombinatorialSimplifierThread[powerOfTwo];
-        return null;
+        final boolean[] varFlags = new boolean[bits];
+        
+        for (int i = 0; i < powerOfTwo; ++i, incFlags(varFlags)) {
+            threads[i] = new CombinatorialSimplifierThread(list, varFlags);
+        }
+        
+        for (int i = 0; i < threads.length - 1; ++i) {
+            threads[i].start();
+        }
+        
+        threads[threads.length - 1].run();
+        
+        for (int i = 0; i < threads.length - 1; ++i) {
+            try {
+                threads[i].join();
+            } catch (final InterruptedException ie) {
+                ie.printStackTrace();
+            }
+        }
+        
+        int bestGroupAmount = -1;
+        List<List<Long>> best = null;
+        
+        for (int i = 0; i < threads.length; ++i) {
+            final List<List<Long>> result = threads[i].getResult();
+            
+            if (bestGroupAmount < result.size()) {
+                bestGroupAmount = result.size();
+                best = result;
+            }
+        }
+        
+        return best;
     }
     
     /**

@@ -55,6 +55,6 @@ public class CombinatorialSimplifierV3 extends Simplifier {
         
         result = append(result, gs.trivialGroups);
         result = append(result, gs.semitrivialGroups);
-        return result;}
-    
+        return result;
+    }
 }
