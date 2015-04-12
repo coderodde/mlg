@@ -311,6 +311,45 @@ public abstract class Simplifier {
     }
     
     /**
+     * Implements the combinatorial search for groups.
+     * 
+     * @param  list the node list to partition.
+     * @return the list of groups.
+     */
+    protected List<List<Long>> simplifyV2(final List<Long> list) {
+        final boolean[] flags = new boolean[list.size()];
+        final long combinationsToConsider = mypow(2L, flags.length - 1) - 1L;
+        
+        flags[0] = true;
+        int bestGroupCount = 0;
+        final List<List<Long>> totalGroupList = new ArrayList<>();
+        
+        // Generate all ways of splitting the input list into two sublists.
+        for (long l = 0L; l < combinationsToConsider; ++l, incFlags(flags)) {
+            final List<Long>[] lists = split(list, flags);
+            
+            if (isGroup(lists[0]) && isGroup(lists[1])) {
+                final List<List<Long>> groupList0 = simplify(lists[0]);
+                final List<List<Long>> groupList1 = simplify(lists[1]);
+                final int groupCount = groupList0.size() + groupList1.size();
+                
+                if (bestGroupCount < groupCount) {
+                    bestGroupCount = groupCount;
+                    totalGroupList.clear();
+                    totalGroupList.addAll(groupList0);
+                    totalGroupList.addAll(groupList1);
+                }
+            }
+        }
+        
+        if (totalGroupList.isEmpty()) {
+            totalGroupList.add(new ArrayList<>(list));
+        }
+        
+        return totalGroupList;
+    }
+    
+    /**
      * Splits the list in two sublists. If <code>flags[i] == true</code>, the
      * element <code>list.get(i)</code> will go one list, if 
      * <code>flags[i] == false</code>, it will go to another.

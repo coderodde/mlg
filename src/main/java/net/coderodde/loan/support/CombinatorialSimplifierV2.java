@@ -7,13 +7,14 @@ import static net.coderodde.loan.Utilities.checkIsGroup;
 
 /**
  * This simplifier seeks to divide the array in two subarrays in such a way,
- * that each one is a group. Then both subarrays are attempted to be split again
- * and so on.
+ * that each one is a proper group. This simplifier improves
+ * {@link net.coderodde.loan.support.CombinatorialSimplifierV1} by a factor of
+ * two.
  * 
  * @author Rodion Efremov
  * @version 1.6
  */
-public class CombinatorialSimplifier extends Simplifier {
+public class CombinatorialSimplifierV2 extends Simplifier {
     
     @Override
     public long[] simplify(long[] graph) {
@@ -23,7 +24,7 @@ public class CombinatorialSimplifier extends Simplifier {
             return graph.clone();
         }
         
-        final GroupSplit gs = split(graph);
+        final Simplifier.GroupSplit gs = split(graph);
         
         // If the graph consists of only trivial groups, return.
         if (gs.trivialGroups.length == graph.length) {
@@ -43,7 +44,7 @@ public class CombinatorialSimplifier extends Simplifier {
         long[] result = new long[gs.nontrivialGroups.length];
         
         if (!initialList.isEmpty()) {
-            groupList = simplify(initialList);
+            groupList = simplifyV2(initialList);
             int index = 0;
 
             for (final List<Long> list : groupList) {

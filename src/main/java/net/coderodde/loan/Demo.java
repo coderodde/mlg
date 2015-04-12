@@ -3,7 +3,8 @@ package net.coderodde.loan;
 import java.util.Random;
 import static net.coderodde.loan.Utilities.countGroups;
 import static net.coderodde.loan.Utilities.createEquityArray;
-import net.coderodde.loan.support.CombinatorialSimplifier;
+import net.coderodde.loan.support.CombinatorialSimplifierV1;
+import net.coderodde.loan.support.CombinatorialSimplifierV2;
 import net.coderodde.loan.support.GreedyCombinatorialSimplifier;
 import net.coderodde.loan.support.PartitionalSimplifierV1;
 import net.coderodde.loan.support.PartitionalSimplifierV2;
@@ -61,7 +62,8 @@ public class Demo {
         System.out.println();
         
         profile(new GreedyCombinatorialSimplifier(), graph);
-        profile(new CombinatorialSimplifier(), graph);
+        profile(new CombinatorialSimplifierV1(), graph);
+        profile(new CombinatorialSimplifierV2(), graph);
         profile(new PartitionalSimplifierV1(), graph);
         profile(new PartitionalSimplifierV2(), graph);
         profile(new PartitionalSimplifierV3(), graph);
