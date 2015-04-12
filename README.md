@@ -6,7 +6,8 @@ Suppose you have a graph, whose nodes represent banks, individuals, companies, a
 * `PartitionalSimplifierV2` (*experimental, optimal, faster*)
 * `PartitionalSimplifierV3` (*optimal, pretty fast*)
 * `PartitionalSimplifierV4` (*optimal, pretty fast*)
-* `CombinatorialSimplifier` (*optimal, pretty fast*)
+* `CombinatorialSimplifierV1` (*experimental, optimal, pretty fast*)
+* `CombinatorialSimplifierV2` (*twice as fast as `Comb...V1`, optimal*) 
 * `GreedyCombinatorialSimplifier` (*super fast, almost optimal*)
 
 The task of minimizing arcs in loan graphs may be rephrased as the task of finding the largest number of **groups** in an input graph. A **group** is any non-empty set of nodes for which the sum of equities is zero. So in order to process your graph, compute the equity of each node, put them into an array and pass it to a simplifier. Upon obtaining a solution array, just march over it from left to right and whenever the accumulated sum is zero, you know that the previous equities constitute a group. For example:
