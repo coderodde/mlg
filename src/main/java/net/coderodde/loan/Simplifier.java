@@ -398,6 +398,8 @@ public abstract class Simplifier {
                              skip);
         }
         
+        String s = "";
+        
         /**
          * Runs the actual simplification.
          */
@@ -406,7 +408,15 @@ public abstract class Simplifier {
             final long combinationsToConsider = 
                     mypow(2L, flags.length - skip - 1) - 1L;
 
-            flags[0] = true;
+            if (allzero(flags)) {
+                flags[0] = true;
+            }
+            
+            for (int i = 0; i < flags.length; ++i) {
+                s += flags[i] ? "1" : "0";
+            }
+            
+            
             int bestGroupCount = 0;
             final List<List<Long>> totalGroupList = new ArrayList<>();
 
@@ -438,6 +448,16 @@ public abstract class Simplifier {
         
         public List<List<Long>> getResult() {
             return output;
+        }
+        
+        protected boolean allzero(final boolean[] flags) {
+            for (final boolean flag : flags) {
+                if (flag) {
+                    return false;
+                }
+            }
+            
+            return true;
         }
     }
     
@@ -489,6 +509,10 @@ public abstract class Simplifier {
                 bestGroupAmount = result.size();
                 best = result;
             }
+        }
+        
+        for (final CombinatorialSimplifierThread t : threads) {
+            System.out.println(t.s);
         }
         
         return best;
