@@ -35,7 +35,6 @@ public class Utilities {
      */
     public static final long[] createEquityArray(final int length,
                                                  final Random random,
-                                                 final long minWeight,
                                                  final long maxWeight,
                                                  final float arcLoadFactor) {
         final long[] array = new long[length];
@@ -45,9 +44,7 @@ public class Utilities {
                                            MAX_ARC_LOAD_FACTOR));
         
         while (arcs > 0) {
-            final long weight = 
-                    minWeight + (long)((maxWeight - minWeight) 
-                                        * random.nextFloat());
+            final long weight = (long)(maxWeight * random.nextFloat());
             final int a = random.nextInt(length);
             final int b = random.nextInt(length);
             

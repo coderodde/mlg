@@ -72,7 +72,6 @@ public class CombinationGenerator {
             k++;
             
             if (k > n) {
-                --k;
                 return false;
             }
             
@@ -102,7 +101,7 @@ public class CombinationGenerator {
      * 
      * @return the size of the current combination.
      */
-    public int getk() {
+    public int getCombinationSize() {
         return k;
     }
 
@@ -150,16 +149,8 @@ public class CombinationGenerator {
                 indices[i] = i;
             }
         } else if (n == k) {
-            if (indices[0] == 0) {
-                for (int i = 0; i < k - 1; ++i) {
-                    indices[i] = i;
-                }
-                
-                indices[k - 1] = k - 2;
-            } else {
-                for (int i = 0; i < k; ++i) {
-                    indices[i] = i;
-                }
+            for (int i = 0; i < k; ++i) {
+                indices[i] = i;
             }
         } else {
             final int emptyRightSpots = oldn - k - indices[0];

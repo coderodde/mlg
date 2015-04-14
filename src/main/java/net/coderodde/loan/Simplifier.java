@@ -200,6 +200,59 @@ public abstract class Simplifier {
     }
     
     /**
+     * Counts the amount of groups formed by the indices. 
+     * <code>positiveIndices[i]</code> gives the block index for a node
+     * <code>positiveArray[i]</code>. Negative structures work in analogous way.
+     * Once the nodes are in their blocks, the routine checks whether they can
+     * be matched. If so the amount of blocks is returned. Otherwise zero is 
+     * returned indicating that the buckets may not be paired into groups.
+     * 
+     * @param positiveArray       the array of positive nodes.
+     * @param negativeArray       the array of negative nodes.
+     * @param positiveIndices     the array of positive indices.
+     * @param negativeIndices     the array of negative indices.
+     * @param cachedPositiveArray the array caching positive nodes of each 
+     *                            group.
+     * @param cachedNegativeArray the array caching negative nodes of each
+     *                            group.
+     * @param k                   the amount of partition blocks.
+     * @return                    the amount of groups in the data.
+     */
+    protected static int countGroups(final long[] positiveArray,
+                                     final long[] negativeArray,
+                                     final int[] positiveIndices,
+                                     final int[] negativeIndices,
+                                     final long[] cachedPositiveArray,
+                                     final long[] cachedNegativeArray,
+                                     final int k) {
+        for (int i = 0; i < cachedPositiveArray.length; ++i) {
+            cachedPositiveArray[i] = 0L;
+            cachedNegativeArray[i] = 0L;
+        }
+        
+        for (int i = 0; i < positiveIndices.length; ++i) {
+            cachedPositiveArray[positiveIndices[i]] += positiveArray[i];
+        }
+        
+        for (int i = 0; i < negativeIndices.length; ++i) {
+            // cachedNegativeArray[i] is the absolute value of the sum of 
+            // negative elements in the block.
+            cachedNegativeArray[negativeIndices[i]] -= negativeArray[i]; 
+        }
+        
+        Arrays.sort(cachedPositiveArray);
+        Arrays.sort(cachedNegativeArray);
+        
+        for (int i = 0; i < cachedPositiveArray.length; ++i) {
+            if (cachedPositiveArray[i] != cachedNegativeArray[i]) {
+                return 0;
+            }
+        }
+        
+        return k;
+    }
+    
+    /**
      * Reconstructs a solution from the input data.
      * 
      * @param positiveArray   the array of positive nodes.
@@ -209,11 +262,11 @@ public abstract class Simplifier {
      * @param blocks          the amount of partition blocks.
      * @return                the graph with <code>blocks</code> groups.
      */
-    protected long[] buildSolution(final long[] positiveArray,
-                                   final long[] negativeArray,
-                                   final int[] positiveIndices,
-                                   final int[] negativeIndices,
-                                   final int blocks) {
+    protected static long[] buildSolution(final long[] positiveArray,
+                                          final long[] negativeArray,
+                                          final int[] positiveIndices,
+                                          final int[] negativeIndices,
+                                          final int blocks) {
         final List<Long>[] positiveListArray = new ArrayList[blocks];
         final List<Long>[] negativeListArray = new ArrayList[blocks];
         
@@ -353,6 +406,200 @@ public abstract class Simplifier {
         }
         
         return totalGroupList;
+    }
+    
+    private static class PartitionalSimplifierThread extends Thread {
+        
+        /**
+         * The smaller of the two arrays.
+         */
+        private final long[] smallArray;
+
+        /**
+         * The larger of the two arrays.
+         */
+        private final long[] largeArray;
+        
+        /**
+         * The output graph.
+         */
+        private volatile long[] output;
+        
+        /**
+         * Specifies whether this thread generates the partitions starting from
+         * the greatest amount of blocks.
+         */
+        private final boolean reversedMode;
+        
+        /**
+         * The amount of blocks to start from.
+         */
+        private final int startingBlockAmount;
+        
+        /**
+         * The flag controlling this thread.
+         */
+        private volatile boolean quit = false;
+        
+        /**
+         * Used for speeding up the group counting.
+         */
+        private long[] cachedPositiveArray;
+        
+        /**
+         * Used for speeding up the group counting.
+         */
+        private long[] cachedNegativeArray;
+        
+        /**
+         * Another thread doing the search. When this thread is ready, it asks
+         * <code>brotherThread</code> to stop.
+         */
+        private PartitionalSimplifierThread brotherThread;
+        
+        PartitionalSimplifierThread(final long[] smallArray,
+                                    final long[] largeArray,
+                                    final boolean reversedMode,
+                                    final int startingBlockAmount) {
+            this.smallArray = smallArray;
+            this.largeArray = largeArray;
+            this.reversedMode = reversedMode;
+            this.startingBlockAmount = startingBlockAmount;
+            this.output = new long[smallArray.length + largeArray.length];
+            this.cachedPositiveArray = new long[startingBlockAmount];
+            this.cachedNegativeArray = new long[startingBlockAmount];
+        }
+        
+        void setBrotherThread(final PartitionalSimplifierThread brotherThread) {
+            this.brotherThread = brotherThread;
+        }
+        
+        @Override
+        public void run() {
+            if (reversedMode) {
+                final ReversedGeneralPartitionGenerator smallGenerator =
+                new ReversedGeneralPartitionGenerator(smallArray.length,
+                                                      startingBlockAmount);
+                do {
+                    final int[] smallArrayIndices = smallGenerator.getIndices();
+
+                    final int blocks = smallGenerator.getk();
+
+                    final SpecialPartitionGenerator largeGenerator = 
+                            new SpecialPartitionGenerator(largeArray.length, 
+                                                          blocks);
+
+                    final int[] largeArrayIndices = largeGenerator.getIndices();
+
+                    do {
+                        if (cachedPositiveArray.length != blocks) {
+                            cachedPositiveArray = new long[blocks];
+                            cachedNegativeArray = new long[blocks];
+                        }
+                            
+                        int groups = countGroups(smallArray,
+                                                 largeArray,
+                                                 smallArrayIndices,
+                                                 largeArrayIndices,
+                                                 cachedPositiveArray,
+                                                 cachedNegativeArray,
+                                                 blocks);
+
+                        if (groups > 0) {
+                            output =  buildSolution(smallArray,
+                                                    largeArray,
+                                                    smallArrayIndices,
+                                                    largeArrayIndices,
+                                                    blocks);
+                            brotherThread.quit();
+                            return;
+                        }
+                        
+                        if (quit) {
+                            // Quitting this thread requested.
+                            return;
+                        }
+                    } while (largeGenerator.inc());
+                } while (smallGenerator.inc());
+
+                throw new IllegalStateException("Should not get here.");
+            } else {
+                final GeneralPartitionGenerator smallGenerator =
+                new GeneralPartitionGenerator(smallArray.length,
+                                              startingBlockAmount);
+
+                final int[] bestSmallIndices = new int[smallArray.length];
+                final int[] bestLargeIndices = new int[largeArray.length];
+
+                int bestGroupAmount = 0;
+                int bestk = -1;
+
+                do {
+                    final int[] smallIndices = smallGenerator.getIndices();
+                    final int blocks = smallGenerator.getk();
+
+                    final SpecialPartitionGenerator largeGenerator = 
+                            new SpecialPartitionGenerator(largeArray.length, 
+                                                          blocks);
+
+                    final int[] largeIndices = largeGenerator.getIndices();
+
+                    do {
+                        if (cachedPositiveArray.length != blocks) {
+                            cachedPositiveArray = new long[blocks];
+                            cachedNegativeArray = new long[blocks];
+                        }
+                        
+                        int groups = countGroups(smallArray,
+                                                 largeArray,
+                                                 smallIndices,
+                                                 largeIndices,
+                                                 cachedPositiveArray,
+                                                 cachedNegativeArray,
+                                                 blocks);
+
+                        if (bestGroupAmount < groups) {
+                            bestGroupAmount = groups;
+                            bestk = blocks;
+
+                            System.arraycopy(smallIndices, 
+                                             0, 
+                                             bestSmallIndices,
+                                             0,
+                                             smallIndices.length);
+
+                            System.arraycopy(largeIndices,
+                                             0, 
+                                             bestLargeIndices, 
+                                             0, 
+                                             largeIndices.length);
+                            
+                            if (quit) {
+                                return;
+                            }
+                        }
+                    } while (largeGenerator.inc());
+                } while (smallGenerator.inc());
+
+                brotherThread.quit();
+                output = buildSolution(smallArray,
+                                       largeArray,
+                                       bestSmallIndices,
+                                       bestLargeIndices,
+                                       bestk);
+            }
+        }
+        
+        boolean isQuit() {
+            return this.quit;
+        }
+        
+        /**
+         * Stops this thread.
+         */
+        void quit() {
+            this.quit = true;
+        }
     }
     
     protected class CombinatorialSimplifierThread extends Thread {
@@ -712,6 +959,46 @@ public abstract class Simplifier {
         } while (smallGenerator.inc());
         
         throw new IllegalStateException("Should not get here.");
+    }
+    
+    protected long[] 
+        simplifyByPartitioningUsingThreads(final long[] smallArray,
+                                           final long[] largeArray,
+                                           final int initialBlocks) {
+        final PartitionalSimplifierThread forwardSearchThread = 
+                new PartitionalSimplifierThread(smallArray, 
+                                                largeArray, 
+                                                false, 
+                                                initialBlocks);
+        
+        final PartitionalSimplifierThread backwardSearchThread =
+                new PartitionalSimplifierThread(smallArray,
+                                                largeArray, 
+                                                true, 
+                                                initialBlocks);
+        
+        // Let them know each other. The winner has to stop the loser.
+        forwardSearchThread.setBrotherThread(backwardSearchThread);
+        backwardSearchThread.setBrotherThread(forwardSearchThread);
+        
+        // Spawn.
+        forwardSearchThread.start();
+        backwardSearchThread.start();
+        
+        // Wait for them.
+        try {
+            forwardSearchThread.join();
+            backwardSearchThread.join();
+        } catch (final InterruptedException ie) {
+            ie.printStackTrace(System.err);
+            throw new IllegalStateException("Threads interrupted.");
+        }
+        
+        if (forwardSearchThread.isQuit()) {
+            return backwardSearchThread.output;
+        } else {
+            return forwardSearchThread.output;
+        }
     }
     
     /**

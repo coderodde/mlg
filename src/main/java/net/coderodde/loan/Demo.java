@@ -11,6 +11,7 @@ import net.coderodde.loan.support.PartitionalSimplifierV1;
 import net.coderodde.loan.support.PartitionalSimplifierV2;
 import net.coderodde.loan.support.PartitionalSimplifierV3;
 import net.coderodde.loan.support.PartitionalSimplifierV4;
+import net.coderodde.loan.support.PartitionalSimplifierV5;
 
 /**
  * This class demonstrates the performance of simplifiers.
@@ -25,17 +26,12 @@ public class Demo {
     /**
      * The amount of nodes in the demo graphs.
      */
-    private static final int LENGTH = 17;
-    
-    /**
-     * The minimum arc weight.
-     */
-    private static final long MIN_WEIGHT = -10L;
+    private static final int LENGTH = 16;
     
     /**
      * The maximum arc weight.
      */
-    private static final long MAX_WEIGHT = 20L;
+    private static final long MAX_WEIGHT = 50L;
     
     /**
      * The entry point of a demonstration program.
@@ -51,7 +47,6 @@ public class Demo {
         
         final long[] graph = createEquityArray(LENGTH,
                                                rnd,
-                                               MIN_WEIGHT,
                                                MAX_WEIGHT,
                                                0.3f);
         
@@ -70,6 +65,7 @@ public class Demo {
         profile(new PartitionalSimplifierV2(), graph);
         profile(new PartitionalSimplifierV3(), graph);
         profile(new PartitionalSimplifierV4(), graph);
+        profile(new PartitionalSimplifierV5(), graph);
     }
     
     /**
