@@ -6,8 +6,9 @@ Suppose you have a graph, whose nodes represent banks, individuals, companies, a
 * `PartitionalSimplifierV2` (*experimental, optimal, faster*)
 * `PartitionalSimplifierV3` (*optimal, pretty fast*)
 * `PartitionalSimplifierV4` (*optimal, pretty fast*)
+* `PartitionalSimplifierV5` (*experimental, optimal*)
 * `CombinatorialSimplifierV1` (*experimental, optimal, pretty fast*)
-* `CombinatorialSimplifierV2` (*experimental, twice as fast as `Comb...V1`, optimal*) 
+* `CombinatorialSimplifierV2` (*experimental, twice as fast as `CombinatorialSimplifierV1`, optimal*) 
 * `CombinatorialSimplifierV3` (*optimal, parallel*)
 * `GreedyCombinatorialSimplifier` (*super fast, almost optimal*)
 
